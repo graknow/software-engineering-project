@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GraySlop/GraySlop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GraySlop.Tests/GraySlop.Tests.csproj" />
+  </Folder>
+</Solution>
