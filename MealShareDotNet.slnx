@@ -6,8 +6,9 @@
     <Project Path="src/MealShareDotNet.Client.Android/MealShareDotNet.Client.Android.csproj" />
     <Project Path="src/MealShareDotNet.Client.Browser/MealShareDotNet.Client.Browser.csproj" />
     <Project Path="src/MealShareDotNet.Client.Desktop/MealShareDotNet.Client.Desktop.csproj" />
-    <Project Path="src/MealShareDotNet.Client.iOS/MealShareDotNet.Client.iOS.csproj" />
     <Project Path="src/MealShareDotNet.Client/MealShareDotNet.Client.csproj" />
+    <Project Path="src/MealShareDotNet.Core/MealShareDotNet.Core.csproj" />
+    <Project Path="src/MealShareDotNet.Infrastructure/MealShareDotNet.Infrastructure.csproj" />
     <Project Path="src/MealShareDotNet.Server/MealShareDotNet.Server.csproj" />
   </Folder>
 </Solution>
