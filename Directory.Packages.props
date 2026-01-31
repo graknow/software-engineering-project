@@ -19,6 +19,9 @@
 
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
 
+    <!-- Database packages  -->
+    <PackageVersion Include="System.Data.SQLite.Core" Version="1.0.119" />
+
     <!-- Testing packages -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
