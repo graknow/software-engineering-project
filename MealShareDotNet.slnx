@@ -2,10 +2,18 @@
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />
   </Folder>
-  <Project Path="src/MealShareDotNet.Client.Browser/MealShareDotNet.Client.Browser.csproj" />
-  <Project Path="src/MealShareDotNet.Client.Desktop/MealShareDotNet.Client.Desktop.csproj" />
-  <Project Path="src/MealShareDotNet.Client/MealShareDotNet.Client.csproj" />
-  <Project Path="src/MealShareDotNet.Core/MealShareDotNet.Core.csproj" />
-  <Project Path="src/MealShareDotNet.Infrastructure/MealShareDotNet.Infrastructure.csproj" />
-  <Project Path="src/MealShareDotNet.Server/MealShareDotNet.Server.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/MealShareDotNet.Client.Browser/MealShareDotNet.Client.Browser.csproj" />
+    <Project Path="src/MealShareDotNet.Client.Desktop/MealShareDotNet.Client.Desktop.csproj" />
+    <Project Path="src/MealShareDotNet.Client/MealShareDotNet.Client.csproj" />
+    <Project Path="src/MealShareDotNet.Core/MealShareDotNet.Core.csproj" />
+    <Project Path="src/MealShareDotNet.Infrastructure/MealShareDotNet.Infrastructure.csproj" />
+    <Project Path="src/MealShareDotNet.Server/MealShareDotNet.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MealShareDotNet.Client.Tests/MealShareDotNet.Client.Tests.csproj" />
+    <Project Path="tests/MealShareDotNet.Core.Tests/MealShareDotNet.Core.Tests.csproj" />
+    <Project Path="tests/MealShareDotNet.Infrastructure.Tests/MealShareDotNet.Infrastructure.Tests.csproj" />
+    <Project Path="tests/MealShareDotNet.Server.Tests/MealShareDotNet.Server.Tests.csproj" />
+  </Folder>
 </Solution>
