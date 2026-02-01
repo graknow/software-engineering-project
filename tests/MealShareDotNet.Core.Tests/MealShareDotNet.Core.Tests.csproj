@@ -20,4 +20,8 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MealShareDotNet.Core\MealShareDotNet.Core.csproj" />
+  </ItemGroup>
+
 </Project>
