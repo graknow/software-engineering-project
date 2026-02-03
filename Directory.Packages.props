@@ -20,7 +20,7 @@
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
 
     <!-- Database packages  -->
-    <PackageVersion Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageVersion Include="System.Data.SQLite" Version="2.0.2" />
     <PackageVersion Include="System.Data.SQLite.EF6" Version="2.0.2" />
 
     <!-- Testing packages -->
