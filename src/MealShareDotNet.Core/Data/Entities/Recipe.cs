@@ -10,7 +10,6 @@ public class Recipe
     [Required]
     public Guid Id { get; set; }
 
-    [Index]
     [Required]
     public string Name { get; set; } = String.Empty;
     public int CookTime { get; set; }

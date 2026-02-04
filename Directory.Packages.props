@@ -21,7 +21,6 @@
 
     <!-- Database packages  -->
     <PackageVersion Include="System.Data.SQLite" Version="2.0.2" />
-    <PackageVersion Include="System.Data.SQLite.EF6" Version="2.0.2" />
 
     <!-- Testing packages -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
