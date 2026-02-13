@@ -1,17 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace MealShareDotNet.Core.Data.Entities;
 
-[Table("Ingredient")]
 public class Ingredient
 {
-    [Key]
-    [Required]
-    public Guid Id { get; set; }
+    public Guid ID { get; set; }
 
-    [Required]
     public string Name { get; set; } = String.Empty;
-    public Guid ImperialUnitOfMeasure { get; set; }
-    public Guid MetricUnitOfMeasure { get; set; }
+    public Guid ImperialUnit { get; set; }
+    public Guid MetricUnit { get; set; }
 }
