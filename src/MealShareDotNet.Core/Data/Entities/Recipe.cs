@@ -2,7 +2,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 
 public class Recipe
 {
-    public Guid ID { get; set; }
+    public int ID { get; set; }
 
     public string Name { get; set; } = String.Empty;
     public int CookTime { get; set; }

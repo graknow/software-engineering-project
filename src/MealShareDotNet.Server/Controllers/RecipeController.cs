@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Data.Requests;
+using MealShareDotNet.Core.Data.DTOs;
 
 namespace MealShareDotNet.Server.Controllers;
 
@@ -18,7 +19,7 @@ public class RecipeController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<string>> GetRecipeListings(
+    public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
             [FromQuery] PageableParams pager)
     {
         if (pager.PageSize is null != pager.PageNumber is null)
@@ -35,6 +36,6 @@ public class RecipeController : ControllerBase
             return Forbid("PageSize exceeds the server's set maximum page size");
         }
 
-        return _recipes.GetRecipeById(new Guid()).Name;
+        return Ok(await _recipes.GetRecipeListings());
     }
 }

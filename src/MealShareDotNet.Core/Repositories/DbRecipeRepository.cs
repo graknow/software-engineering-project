@@ -1,6 +1,8 @@
 using Microsoft.Data.Sqlite;
 using Dapper;
+using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Requests;
 
 namespace MealShareDotNet.Core.Repositories;
 
@@ -15,16 +17,40 @@ public class DbRecipeRepository : IRecipeRepository
         _connectionString = connString;
     }
 
-    public IEnumerable<Recipe> GetRecipes()
-    {
-        return [];
-    }
-
-    public Recipe GetRecipeById(Guid id)
+    public Task<IEnumerable<RecipeListingDTO>> GetRecipeListings(PageableParams pager)
     {
         using (var conn = _connection)
         {
-            return conn.QueryFirst<Recipe>("SELECT * FROM Recipe LIMIT 1");
+            var sql = """
+                SELECT
+                    Recipe.ID,
+                    Recipe.Name,
+                    Recipe.CookTime,
+                    Recipe.ServingQuantity
+                FROM Recipes Recipe
+                LIMIT @PageSize OFFSET @PageNumber
+                """;
+
+            return conn.QueryAsync<RecipeListingDTO>(sql, pager);
+        }
+    }
+
+    public Task<Recipe> GetRecipeById(int id)
+    {
+        using (var conn = _connection)
+        {
+            var recipe_query = """
+                SELECT *
+                FROM Recipes Recipe
+                INNER JOIN RecipeIngredient RI ON RI.RecipeID = Recipe.ID
+                INNER JOIN RecipeTag RT ON RT.RecipeID = Recipe.ID
+                """;
+
+            var ingredients_query = """
+                SELECT *
+                FROM Recipe
+                """;
+            return conn.QuerySingleAsync<Recipe>(recipe_query, new { ID = id });
         }
     }
 
@@ -33,7 +59,7 @@ public class DbRecipeRepository : IRecipeRepository
 
     }
 
-    public void DeleteRecipe(Guid id)
+    public void DeleteRecipe(int id)
     {
 
     }
