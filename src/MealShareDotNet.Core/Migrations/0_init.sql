@@ -29,22 +29,14 @@ CREATE TABLE Tags
     Name TEXT NOT NULL
 );
 
-CREATE TABLE Units
-(
-    ID INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
-    Name TEXT NOT NULL,
-    Abbreviation TEXT NOT NULL
-);
-
 CREATE TABLE RecipeIngredient
 (
     RecipeID INTEGER NOT NULL,
     IngredientID INTEGER NOT NULL,
-    UnitID INTEGER NOT NULL,
-    Quantity INTEGER NOT NULL,
+    Measurement INTEGER,
+    Quantity FLOAT,
     FOREIGN KEY(RecipeID) REFERENCES Recipes(ID),
-    FOREIGN KEY(IngredientID) REFERENCES Ingredients(ID),
-    FOREIGN KEY(UnitID) REFERENCES Units(ID)
+    FOREIGN KEY(IngredientID) REFERENCES Ingredients(ID)
 );
 
 CREATE TABLE RecipeTag

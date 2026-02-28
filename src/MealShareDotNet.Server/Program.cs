@@ -1,4 +1,5 @@
 using MealShareDotNet.Core.Repositories;
+using MealShareDotNet.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +17,13 @@ var fullConnString = connString
 .Replace("{AppDir}", AppDomain.CurrentDomain.BaseDirectory)
 .Replace("{Sep}", Path.DirectorySeparatorChar.ToString());
 
-Console.Write(fullConnString);
-
 builder.Services.AddSingleton<IRecipeRepository>(new DbRecipeRepository(fullConnString));
+
+var migrationsDirectory = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "migrations");
+var migrationService = new MigrationService(fullConnString, migrationsDirectory);
+
+migrationService.CreateDbIfNotExist();
+migrationService.Migrate();
 
 var app = builder.Build();
 

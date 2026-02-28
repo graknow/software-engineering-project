@@ -1,11 +1,8 @@
 namespace MealShareDotNet.Core.Data.Entities;
 
-public class Ingredient
+public class Tag
 {
     public long ID { get; set; }
 
     public string Name { get; set; } = String.Empty;
-
-    public float? Measurement { get; set; }
-    public int? Quantity { get; set; }
 }

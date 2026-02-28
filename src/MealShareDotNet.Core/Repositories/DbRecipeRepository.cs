@@ -21,6 +21,8 @@ public class DbRecipeRepository : IRecipeRepository
     {
         using (var conn = _connection)
         {
+            conn.Open();
+
             var sql = """
                 SELECT
                     Recipe.ID,
@@ -28,7 +30,7 @@ public class DbRecipeRepository : IRecipeRepository
                     Recipe.CookTime,
                     Recipe.ServingQuantity
                 FROM Recipes Recipe
-                LIMIT @PageSize OFFSET @PageNumber
+                LIMIT @PageSize OFFSET @PageNumber;
                 """;
 
             return conn.QueryAsync<RecipeListingDTO>(sql, pager);
@@ -39,18 +41,24 @@ public class DbRecipeRepository : IRecipeRepository
     {
         using (var conn = _connection)
         {
-            var recipe_query = """
-                SELECT *
+            conn.Open();
+
+            var query = """
+                SELECT
+                    Recipe.*
+                    Ingredient.ID as IngredientID
+                    Ingredient.*
+                    2
                 FROM Recipes Recipe
-                INNER JOIN RecipeIngredient RI ON RI.RecipeID = Recipe.ID
-                INNER JOIN RecipeTag RT ON RT.RecipeID = Recipe.ID
+                INNER JOIN RecipeIngredient RI ON RI.RecipeID = @ID
+                INNER JOIN Ingredients Ingredient ON Ingredient.ID = RI.IngredientID
+                INNER JOIN RecipeTag RT ON RT.RecipeID = @ID
+                INNER JOIN Tags Tag ON Tag.ID = RT.TagID
+                INNER JOIN Units Unit ON Unit.ID = RI.UnitID
+                WHERE Recipe.ID = @ID
                 """;
 
-            var ingredients_query = """
-                SELECT *
-                FROM Recipe
-                """;
-            return conn.QuerySingleAsync<Recipe>(recipe_query, new { ID = id });
+            return conn.QuerySingleAsync<Recipe>(query, new { ID = id });
         }
     }
 
@@ -61,7 +69,29 @@ public class DbRecipeRepository : IRecipeRepository
 
     public void DeleteRecipe(int id)
     {
+        using (var conn = _connection)
+        {
+            conn.Open();
 
+            var action = """
+                DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
+                DELETE FROM RecipeIngredient RI WHERE RI.RecipeID = @ID;
+                DELETE FROM RecipeTag RT WHERE RT.RecipeID = @ID;
+                """;
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    conn.Execute(action, new { ID = id });
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
     }
 
     public void UpdateRecipe(Recipe recipe)

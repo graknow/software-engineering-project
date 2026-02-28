@@ -36,6 +36,6 @@ public class RecipeController : ControllerBase
             return Forbid("PageSize exceeds the server's set maximum page size");
         }
 
-        return Ok(await _recipes.GetRecipeListings());
+        return Ok(await _recipes.GetRecipeListings(pager));
     }
 }
