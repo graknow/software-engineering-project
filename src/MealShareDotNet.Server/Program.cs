@@ -19,10 +19,7 @@ var fullConnString = connString
 
 builder.Services.AddSingleton<IRecipeRepository>(new DbRecipeRepository(fullConnString));
 
-var migrationsDirectory = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "migrations");
-var migrationService = new MigrationService(fullConnString, migrationsDirectory);
-
-migrationService.CreateDbIfNotExist();
+var migrationService = new MigrationService(fullConnString, "Migrations");
 migrationService.Migrate();
 
 var app = builder.Build();
