@@ -6,6 +6,7 @@ public class Ingredient
 
     public string Name { get; set; } = String.Empty;
 
-    public float? Measurement { get; set; }
-    public int? Quantity { get; set; }
+    public int? Mass { get; set; } // Mass in 1/10 g
+    public int? Volume { get; set; } // Volume in 1/10 mL
+    public float? Quantity { get; set; }
 }

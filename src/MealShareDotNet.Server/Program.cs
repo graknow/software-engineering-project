@@ -1,21 +1,34 @@
+using MealShareDotNet.Server.Auth;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
 
-// Services
+var authConfigurationGenerator = (ApiKeyAuthSchemeOptions opts) =>
+{
+    var configs = builder.Configuration.GetSection("ApiKeys").Get<List<ApiKeyConfig>>();
+
+    foreach (var config in configs ?? [])
+    {
+        opts.ApiKeys.Add(config.ToApiKey());
+    }
+};
+
+builder.Services.AddAuthentication(ApiKeyAuthSchemeOptions.DefaultScheme)
+    .AddScheme<ApiKeyAuthSchemeOptions, ApiKeyAuthSchemeHandler>(
+            ApiKeyAuthSchemeOptions.DefaultScheme,
+            authConfigurationGenerator
+            );
+
 var connString = builder.Configuration.GetConnectionString("Recipe");
 if (connString is null)
 {
     throw new Exception("Connection string not found in configuration settings.  Exiting...");
 }
 
-var fullConnString = connString
-.Replace("{AppDir}", AppDomain.CurrentDomain.BaseDirectory)
-.Replace("{Sep}", Path.DirectorySeparatorChar.ToString());
+var fullConnString = ConnectionStringService.GenerateConnectionString(connString);
 
 builder.Services.AddSingleton<IRecipeRepository>(new DbRecipeRepository(fullConnString));
 
@@ -28,6 +41,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.MapControllers();

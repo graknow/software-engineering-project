@@ -30,10 +30,15 @@ public class DbRecipeRepository : IRecipeRepository
                     Recipe.CookTime,
                     Recipe.ServingQuantity
                 FROM Recipes Recipe
-                LIMIT @PageSize OFFSET @PageNumber;
+                LIMIT @PageSize OFFSET @PageOffset;
                 """;
 
-            return conn.QueryAsync<RecipeListingDTO>(sql, pager);
+            return conn.QueryAsync<RecipeListingDTO>(sql,
+                    new
+                    {
+                        PageSize = pager.PageSize,
+                        PageOffset = pager.PageSize * (pager.PageNumber - 1)
+                    });
         }
     }
 

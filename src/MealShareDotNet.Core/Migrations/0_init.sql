@@ -20,21 +20,25 @@ CREATE TABLE Recipes
 CREATE TABLE Ingredients
 (
     ID INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
-    Name TEXT NOT NULL
+    Name TEXT UNIQUE NOT NULL,
+    PluralName TEXT UNIQUE
 );
 
 CREATE TABLE Tags
 (
     ID INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
-    Name TEXT NOT NULL
+    Name TEXT NOT NULL,
+    Description TEXT
 );
 
 CREATE TABLE RecipeIngredient
 (
     RecipeID INTEGER NOT NULL,
     IngredientID INTEGER NOT NULL,
-    Measurement INTEGER,
+    Mass INTEGER,
+    Volume INTEGER,
     Quantity FLOAT,
+    PRIMARY KEY(RecipeID, IngredientID),
     FOREIGN KEY(RecipeID) REFERENCES Recipes(ID),
     FOREIGN KEY(IngredientID) REFERENCES Ingredients(ID)
 );
@@ -43,6 +47,7 @@ CREATE TABLE RecipeTag
 (
     RecipeID INTEGER NOT NULL,
     TagID INTEGER NOT NULL,
+    PRIMARY KEY(RecipeID, TagID),
     FOREIGN KEY(RecipeID) REFERENCES Recipes(ID),
     FOREIGN KEY(TagID) REFERENCES Tags(ID)
 );

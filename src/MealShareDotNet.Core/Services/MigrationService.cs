@@ -5,6 +5,10 @@ using Dapper;
 
 namespace MealShareDotNet.Core.Services;
 
+/// <summary>
+/// Handles migrating a SQLite database according to the repository's migration
+/// rules.
+/// </summary>
 public class MigrationService
 {
     private class Migration
@@ -13,10 +17,10 @@ public class MigrationService
         public string Name { get; set; } = String.Empty;
     }
 
+    private const string EMBEDDED_RESOURCE_PREFIX = "MealShareDotNet.Core";
+
     private readonly string _connectionString;
     private readonly string _migrationPrefix;
-
-    private const string EMBEDDED_RESOURCE_PREFIX = "MealShareDotNet.Core";
 
     private SqliteConnection _connection =>
         new SqliteConnection(_connectionString);
@@ -28,7 +32,20 @@ public class MigrationService
         _migrationPrefix += migrationPath.Replace(Path.PathSeparator, '.');
     }
 
-
+    /// <summary>
+    /// <para>
+    /// Migrates a SQLite database according to the migrations in the specified
+    /// migrationPath.
+    /// </para>
+    ///
+    /// <para>
+    /// Note: Creates the SQLite database file if it doesn't exist.
+    /// </para>
+    /// </summary>
+    ///
+    /// <returns>
+    /// true: Migrations successfull.  false: Error in migration application.
+    /// </returns>
     public bool Migrate()
     {
         var created = CreateDbIfNotExist();
@@ -120,6 +137,13 @@ public class MigrationService
         return true;
     }
 
+    /// <summary>
+    /// Creates the database file specified in the connection string if it doesn't already exist.
+    /// </summary>
+    ///
+    /// <returns>
+    /// true: The database file was created.  false: The database file already existed.
+    /// </returns>
     public bool CreateDbIfNotExist()
     {
         var db_file = _connection.DataSource;
@@ -190,7 +214,8 @@ public class MigrationService
             return null;
         }
 
-        return new Migration {
+        return new Migration
+        {
             ID = int.Parse(resourceName[0..nameIndex]),
             Name = resourceName[(nameIndex + 1)..]
         };
