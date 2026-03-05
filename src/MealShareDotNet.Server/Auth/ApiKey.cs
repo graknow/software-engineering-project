@@ -1,11 +1,21 @@
 namespace MealShareDotNet.Server.Auth;
 
+/// <summary>
+/// Maps the appconfig api key settings directly to an object.
+/// </summary>
 public class ApiKeyConfig
 {
     public string Name { get; init; } = String.Empty;
     public string Value { get; init; } = String.Empty;
     public string Roles { get; init; } = String.Empty;
 
+    /// <summary>
+    /// <para>Parses the configuration settings into an ApiKey object, which contains</para>
+    /// <para>strongly typed fields rather than all strings.</para>
+    /// </summary>
+    /// <returns>
+    /// An ApiKey object generated from the passed configuration settings.
+    /// </returns>
     public ApiKey ToApiKey()
     {
         UserRoles roles = 0;
@@ -27,6 +37,9 @@ public class ApiKeyConfig
     }
 }
 
+/// <summary>
+/// ApiKey data used for authenticating/authorizing requests to the server.
+/// </summary>
 public class ApiKey
 {
     public string Name { get; init; } = String.Empty;

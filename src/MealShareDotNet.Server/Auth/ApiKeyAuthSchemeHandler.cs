@@ -5,6 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace MealShareDotNet.Server.Auth;
 
+/// <summary>
+/// An HTTPS request authentication scheme utilizing a custom ApiKey system.
+/// </summary>
 public class ApiKeyAuthSchemeHandler : AuthenticationHandler<ApiKeyAuthSchemeOptions>
 {
     public ApiKeyAuthSchemeHandler(

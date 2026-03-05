@@ -1,5 +1,8 @@
 namespace MealShareDotNet.Server.Auth;
 
+/// <summary>
+/// Valid user roles.
+/// </summary>
 [Flags]
 public enum UserRoles
 {

@@ -45,6 +45,9 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UsePathBase("/api/");
+app.UseRouting();
+
 app.UseHttpsRedirection();
 app.MapControllers();
 
