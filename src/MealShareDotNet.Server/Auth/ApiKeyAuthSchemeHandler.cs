@@ -37,7 +37,7 @@ public class ApiKeyAuthSchemeHandler : AuthenticationHandler<ApiKeyAuthSchemeOpt
 
         if (key.Roles != 0)
         {
-            var roles = key.Roles.ToString().Replace(" ", String.Empty).Split(',');
+            var roles = key.Roles.ToArray();
 
             foreach (var role in roles)
             {

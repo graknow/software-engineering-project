@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace MealShareDotNet.Core.Data.Entities;
+namespace MealShareDotNet.Core.Data.DTOs;
 
 [ExcludeFromCodeCoverage]
-public class Tag
+public class TagDTO
 {
     public long ID { get; set; }
 

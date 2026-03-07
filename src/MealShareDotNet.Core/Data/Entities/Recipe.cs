@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace MealShareDotNet.Core.Data.Entities;
 
+[ExcludeFromCodeCoverage]
 public class Recipe
 {
     public long ID { get; set; }
@@ -11,7 +14,4 @@ public class Recipe
     public string Instructions { get; set; } = String.Empty;
     public DateTime CreationDate { get; set; }
     public DateTime UpdatedDate { get; set; }
-
-    public List<Ingredient> Ingredients { get; set; } = [];
-    public List<Tag> Tags { get; set; } = [];
 }

@@ -19,19 +19,20 @@ public class DbRecipeRepository : IRecipeRepository
 
     public Task<IEnumerable<RecipeListingDTO>> GetRecipeListings(PageableParams pager)
     {
+        var sql = """
+            SELECT
+            Recipe.ID,
+                Recipe.Name,
+                Recipe.CookTime,
+                Recipe.ServingQuantity
+            FROM Recipes Recipe
+            LIMIT @PageSize OFFSET @PageOffset;
+        """;
+
         using (var conn = _connection)
         {
             conn.Open();
 
-            var sql = """
-                SELECT
-                    Recipe.ID,
-                    Recipe.Name,
-                    Recipe.CookTime,
-                    Recipe.ServingQuantity
-                FROM Recipes Recipe
-                LIMIT @PageSize OFFSET @PageOffset;
-                """;
 
             return conn.QueryAsync<RecipeListingDTO>(sql,
                     new
@@ -42,29 +43,29 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public Task<Recipe> GetRecipeById(int id)
+    public Task<RecipeDTO> GetRecipeById(long id)
     {
+        var sql = """
+            SELECT
+                Recipe.*
+                Ingredient.ID as IngredientID
+                Ingredient.*
+            FROM Recipes Recipe
+            INNER JOIN RecipeIngredient RI ON RI.RecipeID = @ID
+            INNER JOIN Ingredients Ingredient ON Ingredient.ID = RI.IngredientID
+            INNER JOIN RecipeTag RT ON RT.RecipeID = @ID
+            INNER JOIN Tags Tag ON Tag.ID = RT.TagID
+            INNER JOIN Units Unit ON Unit.ID = RI.UnitID
+            WHERE Recipe.ID = @ID
+            """;
+
         using (var conn = _connection)
         {
             conn.Open();
 
-            var query = """
-                SELECT
-                    Recipe.*
-                    Ingredient.ID as IngredientID
-                    Ingredient.*
-                    2
-                FROM Recipes Recipe
-                INNER JOIN RecipeIngredient RI ON RI.RecipeID = @ID
-                INNER JOIN Ingredients Ingredient ON Ingredient.ID = RI.IngredientID
-                INNER JOIN RecipeTag RT ON RT.RecipeID = @ID
-                INNER JOIN Tags Tag ON Tag.ID = RT.TagID
-                INNER JOIN Units Unit ON Unit.ID = RI.UnitID
-                WHERE Recipe.ID = @ID
-                """;
-
-            return conn.QuerySingleAsync<Recipe>(query, new { ID = id });
+            return conn.QuerySingleAsync<RecipeDTO>(sql);
         }
+
     }
 
     public void InsertRecipe(Recipe recipe)
@@ -72,7 +73,7 @@ public class DbRecipeRepository : IRecipeRepository
 
     }
 
-    public void DeleteRecipe(int id)
+    public void DeleteRecipe(long id)
     {
         using (var conn = _connection)
         {

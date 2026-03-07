@@ -9,6 +9,6 @@ public class AuthorizeRolesAttribute : AuthorizeAttribute
 {
     public AuthorizeRolesAttribute(UserRoles roles)
     {
-        Roles = roles.ToString().Replace(" ", String.Empty);
+        Roles = roles.ToRoleString();
     }
 }

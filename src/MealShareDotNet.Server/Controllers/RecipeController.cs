@@ -8,22 +8,22 @@ using MealShareDotNet.Server.Auth;
 namespace MealShareDotNet.Server.Controllers;
 
 [ApiController]
-[Route("api/recipe")]
-public class RecipeController : ControllerBase
+[Route("v1/recipes")]
+public class RecipeControllerV1 : ControllerBase
 {
     private readonly IRecipeRepository _recipes;
 
     public const int MAX_PAGE_SIZE = 100;
 
-    public RecipeController(IRecipeRepository recipes)
+    public RecipeControllerV1(IRecipeRepository recipes)
     {
         _recipes = recipes;
     }
 
-    [HttpGet]
-    [AuthorizeRoles(UserRoles.MODERATOR)]
+    [HttpGet("listings")]
     public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
-            [FromQuery] PageableParams pager)
+            [FromQuery] PageableParams pager
+            )
     {
         if (pager.PageSize is null != pager.PageNumber is null)
         {
@@ -42,4 +42,13 @@ public class RecipeController : ControllerBase
 
         return Ok(await _recipes.GetRecipeListings(pager));
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<RecipeDTO>> GetRecipe(
+            long id
+            )
+    {
+        return Ok(await _recipes.GetRecipeById(id));
+    }
+
 }

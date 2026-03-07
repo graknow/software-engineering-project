@@ -12,7 +12,14 @@ var authConfigurationGenerator = (ApiKeyAuthSchemeOptions opts) =>
 
     foreach (var config in configs ?? [])
     {
-        opts.ApiKeys.Add(config.ToApiKey());
+        if (ApiKey.TryParse(config, out var key))
+        {
+            opts.ApiKeys.Add(key);
+        }
+        else
+        {
+            Console.WriteLine($"WARNING - Failed to parse configuration key with name \"{config.Name}\".  Skipping...");
+        }
     }
 };
 
@@ -30,7 +37,7 @@ if (connString is null)
 
 var fullConnString = ConnectionStringService.GenerateConnectionString(connString);
 
-builder.Services.AddSingleton<IRecipeRepository>(new DbRecipeRepository(fullConnString));
+builder.Services.AddTransient<IRecipeRepository>(s => new DbRecipeRepository(fullConnString));
 
 var migrationService = new MigrationService(fullConnString, "Migrations");
 migrationService.Migrate();
@@ -42,11 +49,11 @@ if (app.Environment.IsDevelopment())
 {
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UsePathBase("/api/");
 app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.MapControllers();
