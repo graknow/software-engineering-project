@@ -5,7 +5,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 [ExcludeFromCodeCoverage]
 public class Ingredient
 {
-    public long ID { get; set; }
+    public long? ID { get; set; }
 
     public string Name { get; set; } = String.Empty;
 
@@ -14,8 +14,4 @@ public class Ingredient
     /// <summary>Volume in tenths of a mL.</summary>
     public int? Volume { get; set; }
     public float? Quantity { get; set; }
-
-    // Joins
-    public ICollection<Ingredient> Ingredients { get; set; } = [];
-    public ICollection<Tag> Tags { get; set; } = [];
 }

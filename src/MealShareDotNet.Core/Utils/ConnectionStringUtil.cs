@@ -1,6 +1,6 @@
-namespace MealShareDotNet.Core.Services;
+namespace MealShareDotNet.Core.Utils;
 
-public static class ConnectionStringService
+public static class ConnectionStringUtil
 {
     public static string GenerateConnectionString(string template)
     {

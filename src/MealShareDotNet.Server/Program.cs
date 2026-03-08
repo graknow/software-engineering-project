@@ -1,6 +1,7 @@
 using MealShareDotNet.Server.Auth;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
+using MealShareDotNet.Core.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +36,7 @@ if (connString is null)
     throw new Exception("Connection string not found in configuration settings.  Exiting...");
 }
 
-var fullConnString = ConnectionStringService.GenerateConnectionString(connString);
+var fullConnString = ConnectionStringUtil.GenerateConnectionString(connString);
 
 builder.Services.AddTransient<IRecipeRepository>(s => new DbRecipeRepository(fullConnString));
 

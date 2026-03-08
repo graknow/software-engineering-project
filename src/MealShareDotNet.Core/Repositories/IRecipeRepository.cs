@@ -7,7 +7,7 @@ namespace MealShareDotNet.Core.Repositories;
 public interface IRecipeRepository
 {
     Task<IEnumerable<RecipeListingDTO>> GetRecipeListings(PageableParams pager);
-    Task<RecipeDTO> GetRecipeById(long id);
+    RecipeDTO GetRecipeById(long id);
     void InsertRecipe(Recipe recipe);
     void DeleteRecipe(long id);
     void UpdateRecipe(Recipe recipe);

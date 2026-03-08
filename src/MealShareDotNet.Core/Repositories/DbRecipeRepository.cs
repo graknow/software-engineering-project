@@ -33,7 +33,6 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-
             return conn.QueryAsync<RecipeListingDTO>(sql,
                     new
                     {
@@ -43,53 +42,91 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public Task<RecipeDTO> GetRecipeById(long id)
+    public RecipeDTO GetRecipeById(long id)
     {
         var sql = """
             SELECT
-                Recipe.*
-                Ingredient.ID as IngredientID
-                Ingredient.*
+                Recipe.ID,
+                Recipe.Name,
+                Recipe.CookTime,
+                Recipe.Price,
+                Recipe.ServingQuantity,
+                Recipe.Instructions,
+                Recipe.UpdatedDate
             FROM Recipes Recipe
-            INNER JOIN RecipeIngredient RI ON RI.RecipeID = @ID
-            INNER JOIN Ingredients Ingredient ON Ingredient.ID = RI.IngredientID
-            INNER JOIN RecipeTag RT ON RT.RecipeID = @ID
-            INNER JOIN Tags Tag ON Tag.ID = RT.TagID
-            INNER JOIN Units Unit ON Unit.ID = RI.UnitID
-            WHERE Recipe.ID = @ID
+            WHERE Recipe.ID = @ID;
+
+            SELECT
+                Ingredient.ID,
+                Ingredient.Name,
+                RI.Mass,
+                RI.Volume,
+                RI.Quantity
+            FROM RecipeIngredient RI
+            LEFT OUTER JOIN
+            (
+                SELECT
+                    I.ID,
+                    I.Name
+                FROM Ingredients I
+            ) AS Ingredient ON Ingredient.ID = RI.IngredientID
+            WHERE RI.RecipeID = @ID;
+
+            SELECT
+                Tag.ID,
+                Tag.Name,
+                Tag.Description
+            FROM RecipeTag RT
+            LEFT OUTER JOIN
+            (
+                SELECT
+                    T.ID,
+                    T.Name,
+                    T.Description
+                FROM Tags T
+            ) AS Tag ON Tag.ID = RT.TagID
+            WHERE RT.RecipeID = @ID;
             """;
 
         using (var conn = _connection)
         {
             conn.Open();
 
-            return conn.QuerySingleAsync<RecipeDTO>(sql);
+            using (var results = conn.QueryMultiple(sql, new { ID = id }))
+            {
+                var recipe = results.ReadSingle<RecipeDTO>();
+                recipe.Ingredients = results.Read<IngredientDTO>().ToList();
+                recipe.Tags = results.Read<TagDTO>().ToList();
+                return recipe;
+            }
         }
 
     }
 
     public void InsertRecipe(Recipe recipe)
     {
+        var sql = """
 
+            """;
     }
 
     public void DeleteRecipe(long id)
     {
+        var sql = """
+            DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
+            DELETE FROM RecipeIngredient RI WHERE RI.RecipeID = @ID;
+            DELETE FROM RecipeTag RT WHERE RT.RecipeID = @ID;
+            """;
+
         using (var conn = _connection)
         {
             conn.Open();
-
-            var action = """
-                DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
-                DELETE FROM RecipeIngredient RI WHERE RI.RecipeID = @ID;
-                DELETE FROM RecipeTag RT WHERE RT.RecipeID = @ID;
-                """;
 
             using (var trans = conn.BeginTransaction())
             {
                 try
                 {
-                    conn.Execute(action, new { ID = id });
+                    conn.Execute(sql, new { ID = id });
                     trans.Commit();
                 }
                 catch
@@ -105,8 +142,67 @@ public class DbRecipeRepository : IRecipeRepository
 
     }
 
+    public void InsertIngredient(Ingredient ingredient)
+    {
+
+    }
+
+    public void DeleteIngredient(long id)
+    {
+        throw new NotSupportedException();
+    }
+
+    public void UpdateIngredient(Ingredient ingredient)
+    {
+
+    }
+
+    public void InsertTag(Tag tag)
+    {
+        if (tag.ID is not null)
+        {
+
+        }
+
+        var sql = """
+            INSERT INTO Tags Tag
+            """;
+    }
+
+    public void DeleteTag(long id)
+    {
+        var sql = """
+            DELETE FROM RecipeTag RT WHERE RT.TagID = @ID;
+            DELETE FROM Tags Tag WHERE Tag.ID = @ID;
+            """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    conn.Execute(sql, new { ID = id });
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
+    }
+
+    public void UpdateTag(Tag tag)
+    {
+    }
+
     public void Save()
     {
 
     }
+
+
 }

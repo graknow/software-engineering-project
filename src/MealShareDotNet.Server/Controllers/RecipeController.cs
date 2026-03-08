@@ -27,11 +27,11 @@ public class RecipeControllerV1 : ControllerBase
     {
         if (pager.PageSize is null != pager.PageNumber is null)
         {
-            return BadRequest($"Either PageSize or PageNumber is not defined while the other is defined.");
+            return BadRequest($"PageSize and PageNumber must both be defined or null.");
         }
         else if (pager.PageSize > MAX_PAGE_SIZE)
         {
-            return Forbid("PageSize exceeds the server's set maximum page size");
+            return Forbid("PageSize exceeds the server's set maximum page size.");
         }
 
         if (pager.PageSize is null)
@@ -48,7 +48,7 @@ public class RecipeControllerV1 : ControllerBase
             long id
             )
     {
-        return Ok(await _recipes.GetRecipeById(id));
+        return Ok(_recipes.GetRecipeById(id));
     }
 
 }

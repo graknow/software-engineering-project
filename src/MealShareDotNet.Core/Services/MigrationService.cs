@@ -17,7 +17,7 @@ public class MigrationService
         public string Name { get; set; } = String.Empty;
     }
 
-    private const string EMBEDDED_RESOURCE_PREFIX = "MealShareDotNet.Core";
+    private const string EmbeddedResourcePrefix = "MealShareDotNet.Core";
 
     private readonly string _connectionString;
     private readonly string _migrationPrefix;
@@ -28,7 +28,7 @@ public class MigrationService
     public MigrationService(string connString, string migrationPath)
     {
         _connectionString = connString;
-        _migrationPrefix = EMBEDDED_RESOURCE_PREFIX + '.';
+        _migrationPrefix = EmbeddedResourcePrefix + '.';
         _migrationPrefix += migrationPath.Replace(Path.PathSeparator, '.');
     }
 
