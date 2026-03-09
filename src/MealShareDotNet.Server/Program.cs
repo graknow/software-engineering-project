@@ -1,4 +1,47 @@
+using MealShareDotNet.Server.Auth;
+using MealShareDotNet.Core.Repositories;
+using MealShareDotNet.Core.Services;
+using MealShareDotNet.Core.Utils;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+var authConfigurationGenerator = (ApiKeyAuthSchemeOptions opts) =>
+{
+    var configs = builder.Configuration.GetSection("ApiKeys").Get<List<ApiKeyConfig>>();
+
+    foreach (var config in configs ?? [])
+    {
+        if (ApiKey.TryParse(config, out var key))
+        {
+            opts.ApiKeys.Add(key);
+        }
+        else
+        {
+            Console.WriteLine($"WARNING - Failed to parse configuration key with name \"{config.Name}\".  Skipping...");
+        }
+    }
+};
+
+builder.Services.AddAuthentication(ApiKeyAuthSchemeOptions.DefaultScheme)
+    .AddScheme<ApiKeyAuthSchemeOptions, ApiKeyAuthSchemeHandler>(
+            ApiKeyAuthSchemeOptions.DefaultScheme,
+            authConfigurationGenerator
+            );
+
+var connString = builder.Configuration.GetConnectionString("Recipe");
+if (connString is null)
+{
+    throw new Exception("Connection string not found in configuration settings.  Exiting...");
+}
+
+var fullConnString = ConnectionStringUtil.GenerateConnectionString(connString);
+
+builder.Services.AddTransient<IRecipeRepository>(s => new DbRecipeRepository(fullConnString));
+
+var migrationService = new MigrationService(fullConnString, "Migrations");
+migrationService.Migrate();
 
 var app = builder.Build();
 
@@ -7,30 +50,13 @@ if (app.Environment.IsDevelopment())
 {
 }
 
+app.UsePathBase("/api/");
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

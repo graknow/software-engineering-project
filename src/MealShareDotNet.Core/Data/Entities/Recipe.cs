@@ -1,20 +1,21 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MealShareDotNet.Core.Data.Entities;
 
-[Table("Recipe")]
+[ExcludeFromCodeCoverage]
 public class Recipe
 {
-    [Key]
-    [Required]
-    public Guid Id { get; set; }
+    public long? ID { get; set; }
 
-    [Required]
     public string Name { get; set; } = String.Empty;
-    public int CookTime { get; set; }
-    public int Price { get; set; }
-    public int ServingQuantity { get; set; }
+    public int? CookTime { get; set; }
+    public int? Price { get; set; }
+    public int? ServingQuantity { get; set; }
+    public string Instructions { get; set; } = String.Empty;
     public DateTime CreationDate { get; set; }
-    public DateTime LastUpdatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
+
+    // Joins
+    public ICollection<Ingredient> Ingredients { get; set; } = [];
+    public ICollection<Tag> Tags { get; set; } = [];
 }

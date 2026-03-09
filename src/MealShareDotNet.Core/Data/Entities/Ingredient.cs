@@ -1,17 +1,17 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MealShareDotNet.Core.Data.Entities;
 
-[Table("Ingredient")]
+[ExcludeFromCodeCoverage]
 public class Ingredient
 {
-    [Key]
-    [Required]
-    public Guid Id { get; set; }
+    public long? ID { get; set; }
 
-    [Required]
     public string Name { get; set; } = String.Empty;
-    public Guid ImperialUnitOfMeasure { get; set; }
-    public Guid MetricUnitOfMeasure { get; set; }
+
+    /// <summary>Mass in tenths of a gram.</summary>
+    public int? Mass { get; set; }
+    /// <summary>Volume in tenths of a mL.</summary>
+    public int? Volume { get; set; }
+    public float? Quantity { get; set; }
 }
