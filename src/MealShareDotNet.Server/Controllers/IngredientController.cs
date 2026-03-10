@@ -9,20 +9,20 @@ using MealShareDotNet.Server.Auth;
 namespace MealShareDotNet.Server.Controllers;
 
 [ApiController]
-[Route("v1/recipes")]
-public class RecipeControllerV1 : ControllerBase
+[Route("v1/ingredients")]
+public class IngredientControllerV1 : ControllerBase
 {
     private readonly IRecipeRepository _recipes;
 
     public const int MAX_PAGE_SIZE = 100;
 
-    public RecipeControllerV1(IRecipeRepository recipes)
+    public IngredientControllerV1(IRecipeRepository recipes)
     {
         _recipes = recipes;
     }
 
     [HttpGet("listings")]
-    public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
+    public async Task<ActionResult<IEnumerable<TagListingDTO>>> GetTagListings(
             [FromQuery] PageableParams pager
             )
     {
@@ -41,40 +41,54 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        return Ok(await _recipes.GetRecipeListingsAsync(pager));
+        return Ok(await _recipes.GetTagListings(pager));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<RecipeDTO>> GetRecipe(
+    public async Task<ActionResult<RecipeDTO>> GetTag(
             long id
             )
     {
-        return Ok(_recipes.GetRecipeById(id));
+        var result = await _recipes.GetTag(id);
+
+        if (result is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Recipe>> InsertRecipe(
-            [FromBody] RecipeDTO recipe
+    public async Task<ActionResult<Tag>> InsertTag(
+            [FromBody] TagDTO tag
             )
     {
-        return Ok();
+        return Ok(_recipes.InsertTag(tag));
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteRecipe(
+    public async Task<IActionResult> DeleteTag(
             long id
             )
     {
-        _recipes.DeleteRecipe(id);
-        return Ok();
+        try
+        {
+            _recipes.DeleteTag(id);
+            return NoContent();
+        }
+        catch
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateRecipe(
+    public async Task<IActionResult> UpdateTag(
             long id,
-            [FromBody] RecipeDTO recipe
+            [FromBody] TagDTO tag
             )
     {
-        return Ok();
+        return Ok(_recipes.UpdateTag(tag));
     }
 }

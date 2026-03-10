@@ -6,21 +6,22 @@ namespace MealShareDotNet.Core.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<IEnumerable<RecipeListingDTO>> GetRecipeListings(PageableParams pager);
-    RecipeDTO GetRecipeById(long id);
+    Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(PageableParams pager);
+    RecipeDTO? GetRecipeById(long id);
+    Task<bool> RecipeExistsAsync(long id);
     void InsertRecipe(Recipe recipe);
-    void DeleteRecipe(long id);
+    Task DeleteRecipe(long id);
     void UpdateRecipe(Recipe recipe);
 
-    Task<IngredientDTO> GetIngredient(long id);
     Task<IEnumerable<IngredientListingDTO>> GetIngredientListings(PageableParams pager);
-    int InsertIngredients(IEnumerable<Ingredient> ingredients);
-    int DeleteIngredients(IEnumerable<long> ids);
-    // update
+    Task<IngredientDTO?> GetIngredient(long id);
+    Ingredient InsertIngredient(IngredientDTO ingredient);
+    void DeleteIngredient(long id);
+    Ingredient UpdateIngredient(IngredientDTO ingredient);
 
-    Task<TagDTO> GetTag(long id);
     Task<IEnumerable<TagListingDTO>> GetTagListings(PageableParams pager);
-    int InsertTags(IEnumerable<Tag> tags);
-    int DeleteTags(IEnumerable<long> ids);
-    int UpdateTags(IEnumerable<Tag> tags);
+    Task<TagDTO?> GetTag(long id);
+    Tag InsertTag(TagDTO tag);
+    void DeleteTag(long id);
+    Tag UpdateTag(TagDTO tag);
 }

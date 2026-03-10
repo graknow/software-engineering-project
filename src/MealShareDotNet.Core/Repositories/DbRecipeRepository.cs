@@ -17,7 +17,7 @@ public class DbRecipeRepository : IRecipeRepository
         _connectionString = connString;
     }
 
-    public Task<IEnumerable<RecipeListingDTO>> GetRecipeListings(PageableParams pager)
+    public Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(PageableParams pager)
     {
         var sql = """
             SELECT
@@ -42,7 +42,7 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public RecipeDTO GetRecipeById(long id)
+    public RecipeDTO? GetRecipeById(long id)
     {
         var sql = """
             SELECT
@@ -94,23 +94,70 @@ public class DbRecipeRepository : IRecipeRepository
 
             using (var results = conn.QueryMultiple(sql, new { ID = id }))
             {
-                var recipe = results.ReadSingle<RecipeDTO>();
+                var recipe = results.ReadSingleOrDefault<RecipeDTO>();
+                if (recipe is null)
+                {
+                    return null;
+                }
+
                 recipe.Ingredients = results.Read<IngredientDTO>().ToList();
                 recipe.Tags = results.Read<TagDTO>().ToList();
                 return recipe;
             }
         }
+    }
 
+    public Task<bool> RecipeExistsAsync(long id)
+    {
+        var sql = """
+            SELECT
+                COUNT(*)
+            FROM Recipes Recipe
+            WHERE Recipe.ID = @ID;
+            """;
+
+        using (var conn = _connection)
+        {
+            return conn.ExecuteScalarAsync<bool>(sql, new { ID = id });
+        }
     }
 
     public void InsertRecipe(Recipe recipe)
     {
         var sql = """
-
+            INSERT INTO Recipes
+            (Name, CookTime, Price, ServingQuantity, Instructions)
+            VALUES
+            (@Name, @CookTime, @Price, @ServingQuantity, @Instructions);
             """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    var recipeTask = conn.ExecuteAsync(sql, new
+                    {
+                        Name = recipe.Name,
+                        CookTime = recipe.CookTime,
+                        Price = recipe.Price,
+                        ServingQuantity = recipe.ServingQuantity,
+                        Instructions = recipe.Instructions
+                    });
+                }
+                catch
+                {
+                    trans.Rollback();
+                    throw;
+                }
+            }
+        }
     }
 
-    public void DeleteRecipe(long id)
+    public Task DeleteRecipe(long id)
     {
         var sql = """
             DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
@@ -126,12 +173,13 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    conn.Execute(sql, new { ID = id });
-                    trans.Commit();
+                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                    return deleteTask.ContinueWith(_ => trans.CommitAsync());
                 }
                 catch
                 {
                     trans.Rollback();
+                    throw;
                 }
             }
         }
@@ -142,7 +190,7 @@ public class DbRecipeRepository : IRecipeRepository
 
     }
 
-    public Task<IngredientDTO> GetIngredient(long id)
+    public Task<IngredientDTO?> GetIngredient(long id)
     {
         var sql = """
             SELECT
@@ -159,7 +207,7 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            return conn.QuerySingleAsync<IngredientDTO>(sql, new { ID = id });
+            return conn.QuerySingleOrDefaultAsync<IngredientDTO>(sql, new { ID = id });
         }
     }
 
@@ -185,16 +233,32 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public int InsertIngredients(IEnumerable<Ingredient> ingredients)
+    public Ingredient InsertIngredient(IngredientDTO ingredient)
     {
         var sql = """
             INSERT INTO Ingredients
             (Name)
             VALUES
-            (@Name);
+            (@Name)
+            RETURNING *;
             """;
 
-        var rowsAffected = 0;
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            var entity = conn.ExecuteScalar<Ingredient>(sql, ingredient);
+
+            return entity!;
+        }
+    }
+
+    public void DeleteIngredient(long id)
+    {
+        var sql = """
+            DELETE FROM RecipeIngredient AS RT WHERE RT.IngredientID = @ID;
+            DELETE FROM Ingredients AS Ingredient WHERE Ingredient.ID = @ID;
+            """;
 
         using (var conn = _connection)
         {
@@ -204,7 +268,7 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    rowsAffected = conn.Execute(sql, ingredients);
+                    conn.Execute(sql, new { ID = id });
                     trans.Commit();
                 }
                 catch
@@ -213,60 +277,24 @@ public class DbRecipeRepository : IRecipeRepository
                 }
             }
         }
-
-        return rowsAffected;
     }
 
-    public int DeleteIngredients(IEnumerable<long> ids)
+    public Ingredient UpdateIngredient(IngredientDTO ingredient)
     {
         var sql = """
-            DELETE FROM Ingredients Ingredient WHERE Ingredient.ID = @ID;
-            """;
-
-        var rowsAffected = 0;
-
-        using (var conn = _connection)
-        {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
-            {
-                try
-                {
-                    rowsAffected = conn.Execute(sql, ids.Select(id => new { ID = id }));
-                    trans.Commit();
-                }
-                catch
-                {
-                    trans.Rollback();
-                }
-            }
-        }
-
-        return rowsAffected;
-    }
-
-    public void UpdateIngredient(Ingredient ingredient)
-    {
-
-    }
-
-    public Task<TagDTO> GetTag(long id)
-    {
-        var sql = """
-            SELECT
-                Tag.ID,
-                Tag.Name,
-                Tag.Description
-            FROM Tags Tag
-            WHERE Tag.ID = @ID;
+            UPDATE Ingredients AS Ingredient
+            SET Name = @Name
+            WHERE Ingredient.ID = @ID
+            RETURNING *;
             """;
 
         using (var conn = _connection)
         {
             conn.Open();
 
-            return conn.QuerySingleAsync<TagDTO>(sql, new { ID = id });
+            var entity = conn.ExecuteScalar<Ingredient>(sql, ingredient);
+
+            return entity!;
         }
     }
 
@@ -293,77 +321,51 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public int InsertTags(IEnumerable<Tag> tags)
+    public Task<TagDTO?> GetTag(long id)
     {
         var sql = """
-            INSERT INTO Tags Tag
-            (Name, Description)
-            VALUES
-            (@Name, @Description);
-            """;
-
-        var rowsAffected = 0;
-
-        using (var conn = _connection)
-        {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
-            {
-                try
-                {
-                    rowsAffected = conn.Execute(sql, tags);
-                    trans.Commit();
-                }
-                catch
-                {
-                    trans.Rollback();
-                }
-            }
-        }
-
-        return rowsAffected;
-    }
-
-    public int DeleteTags(IEnumerable<long> ids)
-    {
-        var sql = """
-            DELETE FROM RecipeTag RT WHERE RT.TagID = @ID;
-            DELETE FROM Tags Tag WHERE Tag.ID = @ID;
-            """;
-
-        var rowsAffected = 0;
-
-        using (var conn = _connection)
-        {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
-            {
-                try
-                {
-                    rowsAffected = conn.Execute(sql, ids.Select(id => new { ID = id }));
-                    trans.Commit();
-                }
-                catch
-                {
-                    trans.Rollback();
-                }
-            }
-        }
-
-        return rowsAffected;
-    }
-
-    public int UpdateTags(IEnumerable<Tag> tags)
-    {
-        var sql = """
-            UPDATE Tags Tag
-            SET Tag.Name = @Name, Tag.Description = @Description
+            SELECT
+                Tag.ID,
+                Tag.Name,
+                Tag.Description
+            FROM Tags Tag
             WHERE Tag.ID = @ID;
             """;
 
-        var rowsAffected = 0;
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            return conn.QuerySingleOrDefaultAsync<TagDTO>(sql, new { ID = id });
+        }
+    }
+
+    public Tag InsertTag(TagDTO tag)
+    {
+        var sql = """
+            INSERT INTO Tags
+            (Name, Description)
+            VALUES
+            (@Name, @Description)
+            RETURNING *;
+            """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            var entity = conn.ExecuteScalar<Tag>(sql, tag);
+
+            return entity!;
+        }
+    }
+
+    public void DeleteTag(long id)
+    {
+        var sql = """
+            DELETE FROM RecipeTag AS RT WHERE RT.TagID = @ID;
+            DELETE FROM Tags AS Tag WHERE Tag.ID = @ID;
+            """;
 
         using (var conn = _connection)
         {
@@ -373,16 +375,34 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    rowsAffected = conn.Execute(sql, tags);
+                    conn.Execute(sql, new { ID = id });
                     trans.Commit();
                 }
                 catch
                 {
                     trans.Rollback();
+                    throw;
                 }
             }
         }
+    }
 
-        return rowsAffected;
+    public Tag UpdateTag(TagDTO tag)
+    {
+        var sql = """
+            UPDATE Tags AS Tag
+            SET Name = @Name, Description = @Description
+            WHERE Tag.ID = @ID
+            RETURNING *;
+            """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            var entity = conn.ExecuteScalar<Tag>(sql, tag);
+
+            return entity!;
+        }
     }
 }
