@@ -27,7 +27,7 @@ public class DbRecipeRepository : IRecipeRepository
                 Recipe.ServingQuantity
             FROM Recipes Recipe
             LIMIT @PageSize OFFSET @PageOffset;
-        """;
+            """;
 
         using (var conn = _connection)
         {
@@ -142,39 +142,59 @@ public class DbRecipeRepository : IRecipeRepository
 
     }
 
-    public void InsertIngredient(Ingredient ingredient)
+    public Task<IngredientDTO> GetIngredient(long id)
     {
+        var sql = """
+            SELECT
+                Ingredient.ID,
+                Ingredient.Name,
+                Ingredient.Mass,
+                Ingredient.Volume,
+                Ingredient.Quantity
+            FROM Ingredients Ingredient
+            WHERE Ingredient.ID = @ID;
+            """;
 
-    }
-
-    public void DeleteIngredient(long id)
-    {
-        throw new NotSupportedException();
-    }
-
-    public void UpdateIngredient(Ingredient ingredient)
-    {
-
-    }
-
-    public void InsertTag(Tag tag)
-    {
-        if (tag.ID is not null)
+        using (var conn = _connection)
         {
+            conn.Open();
 
+            return conn.QuerySingleAsync<IngredientDTO>(sql, new { ID = id });
         }
-
-        var sql = """
-            INSERT INTO Tags Tag
-            """;
     }
 
-    public void DeleteTag(long id)
+    public Task<IEnumerable<IngredientListingDTO>> GetIngredientListings(PageableParams pager)
     {
         var sql = """
-            DELETE FROM RecipeTag RT WHERE RT.TagID = @ID;
-            DELETE FROM Tags Tag WHERE Tag.ID = @ID;
+            SELECT
+                Ingredient.ID,
+                Ingredient.Name
+            FROM Ingredients Ingredient
+            LIMIT @PageSize OFFSET @PageOffset;
             """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            return conn.QueryAsync<IngredientListingDTO>(sql, new
+            {
+                PageSize = pager.PageSize,
+                PageOffset = pager.PageSize * (pager.PageNumber - 1)
+            });
+        }
+    }
+
+    public int InsertIngredients(IEnumerable<Ingredient> ingredients)
+    {
+        var sql = """
+            INSERT INTO Ingredients
+            (Name)
+            VALUES
+            (@Name);
+            """;
+
+        var rowsAffected = 0;
 
         using (var conn = _connection)
         {
@@ -184,7 +204,7 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    conn.Execute(sql, new { ID = id });
+                    rowsAffected = conn.Execute(sql, ingredients);
                     trans.Commit();
                 }
                 catch
@@ -193,16 +213,176 @@ public class DbRecipeRepository : IRecipeRepository
                 }
             }
         }
+
+        return rowsAffected;
     }
 
-    public void UpdateTag(Tag tag)
+    public int DeleteIngredients(IEnumerable<long> ids)
     {
+        var sql = """
+            DELETE FROM Ingredients Ingredient WHERE Ingredient.ID = @ID;
+            """;
+
+        var rowsAffected = 0;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    rowsAffected = conn.Execute(sql, ids.Select(id => new { ID = id }));
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
+
+        return rowsAffected;
     }
 
-    public void Save()
+    public void UpdateIngredient(Ingredient ingredient)
     {
 
     }
 
+    public Task<TagDTO> GetTag(long id)
+    {
+        var sql = """
+            SELECT
+                Tag.ID,
+                Tag.Name,
+                Tag.Description
+            FROM Tags Tag
+            WHERE Tag.ID = @ID;
+            """;
 
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            return conn.QuerySingleAsync<TagDTO>(sql, new { ID = id });
+        }
+    }
+
+    public Task<IEnumerable<TagListingDTO>> GetTagListings(PageableParams pager)
+    {
+        var sql = """
+            SELECT
+                Tag.ID,
+                Tag.Name,
+                Tag.Description
+            FROM Tags Tag
+            LIMIT @PageSize OFFSET @PageOffset;
+            """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            return conn.QueryAsync<TagListingDTO>(sql, new
+            {
+                PageSize = pager.PageSize,
+                PageOffset = pager.PageSize * (pager.PageNumber - 1)
+            });
+        }
+    }
+
+    public int InsertTags(IEnumerable<Tag> tags)
+    {
+        var sql = """
+            INSERT INTO Tags Tag
+            (Name, Description)
+            VALUES
+            (@Name, @Description);
+            """;
+
+        var rowsAffected = 0;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    rowsAffected = conn.Execute(sql, tags);
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
+
+        return rowsAffected;
+    }
+
+    public int DeleteTags(IEnumerable<long> ids)
+    {
+        var sql = """
+            DELETE FROM RecipeTag RT WHERE RT.TagID = @ID;
+            DELETE FROM Tags Tag WHERE Tag.ID = @ID;
+            """;
+
+        var rowsAffected = 0;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    rowsAffected = conn.Execute(sql, ids.Select(id => new { ID = id }));
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
+
+        return rowsAffected;
+    }
+
+    public int UpdateTags(IEnumerable<Tag> tags)
+    {
+        var sql = """
+            UPDATE Tags Tag
+            SET Tag.Name = @Name, Tag.Description = @Description
+            WHERE Tag.ID = @ID;
+            """;
+
+        var rowsAffected = 0;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            using (var trans = conn.BeginTransaction())
+            {
+                try
+                {
+                    rowsAffected = conn.Execute(sql, tags);
+                    trans.Commit();
+                }
+                catch
+                {
+                    trans.Rollback();
+                }
+            }
+        }
+
+        return rowsAffected;
+    }
 }

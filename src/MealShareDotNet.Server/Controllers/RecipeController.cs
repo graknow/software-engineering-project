@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MealShareDotNet.Core.Repositories;
-using MealShareDotNet.Core.Data.Requests;
 using MealShareDotNet.Core.Data.DTOs;
+using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Requests;
 using MealShareDotNet.Server.Auth;
 
 namespace MealShareDotNet.Server.Controllers;
@@ -51,4 +52,29 @@ public class RecipeControllerV1 : ControllerBase
         return Ok(_recipes.GetRecipeById(id));
     }
 
+    [HttpPost]
+    public async Task<ActionResult<Recipe>> InsertRecipe(
+            [FromBody] RecipeDTO recipe
+            )
+    {
+        return Ok();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteRecipe(
+            long id
+            )
+    {
+        _recipes.DeleteRecipe(id);
+        return Ok();
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateRecipe(
+            long id,
+            [FromBody] RecipeDTO recipe
+            )
+    {
+        return Ok();
+    }
 }

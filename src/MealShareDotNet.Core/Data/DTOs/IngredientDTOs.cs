@@ -15,7 +15,7 @@ public class IngredientDTO
 }
 
 [ExcludeFromCodeCoverage]
-public class IngredientNameDTO
+public class IngredientListingDTO
 {
     public long ID { get; set; }
 

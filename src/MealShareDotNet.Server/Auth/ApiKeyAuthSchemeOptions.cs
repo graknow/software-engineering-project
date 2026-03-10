@@ -7,6 +7,9 @@ namespace MealShareDotNet.Server.Auth;
 /// </summary>
 public class ApiKeyAuthSchemeOptions : AuthenticationSchemeOptions
 {
+    /// <summary>
+    /// Default authentication scheme name.
+    /// </summary>
     public const string DefaultScheme = "ApiKey";
 
     /// <summary>
