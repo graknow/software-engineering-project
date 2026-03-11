@@ -1,27 +1,42 @@
-using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
-using MealShareDotNet.Core.Data.Requests;
 
 namespace MealShareDotNet.Core.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(PageableParams pager);
-    RecipeDTO? GetRecipeById(long id);
+    Task<IEnumerable<Recipe>> SearchRecipesAsync(
+            string? query = null,
+            uint? pageSize = null,
+            uint? pageOffset = null
+            );
+
+    Task<Recipe?> GetRecipeByIdAsync(long id);
     Task<bool> RecipeExistsAsync(long id);
-    void InsertRecipe(Recipe recipe);
-    Task DeleteRecipe(long id);
-    void UpdateRecipe(Recipe recipe);
+    Task<Recipe> InsertRecipeAsync(Recipe recipe);
+    Task DeleteRecipeAsync(long id);
+    Recipe UpdateRecipe(Recipe recipe);
 
-    Task<IEnumerable<IngredientListingDTO>> GetIngredientListings(PageableParams pager);
-    Task<IngredientDTO?> GetIngredient(long id);
-    Ingredient InsertIngredient(IngredientDTO ingredient);
-    void DeleteIngredient(long id);
-    Ingredient UpdateIngredient(IngredientDTO ingredient);
 
-    Task<IEnumerable<TagListingDTO>> GetTagListings(PageableParams pager);
-    Task<TagDTO?> GetTag(long id);
-    Tag InsertTag(TagDTO tag);
-    void DeleteTag(long id);
-    Tag UpdateTag(TagDTO tag);
+    Task<IEnumerable<Ingredient>> SearchIngredientsAsync(
+            string? query = null,
+            uint? pageSize = null,
+            uint? pageOffset = null
+            );
+
+    Task<Ingredient?> GetIngredientByIdAsync(long id);
+    Ingredient InsertIngredient(Ingredient ingredient);
+    Task DeleteIngredientAsync(long id);
+    Ingredient UpdateIngredient(Ingredient ingredient);
+
+
+    Task<IEnumerable<Tag>> SearchTagsAsync(
+            string? query = null,
+            uint? pageSize = null,
+            uint? pageOffset = null
+            );
+
+    Task<Tag?> GetTagByIdAsync(long id);
+    Tag InsertTag(Tag tag);
+    Task DeleteTagAsync(long id);
+    Tag UpdateTag(Tag tag);
 }

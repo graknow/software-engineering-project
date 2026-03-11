@@ -8,8 +8,8 @@ public class RecipeListingDTO
     public long ID { get; set; }
 
     public string Name { get; set; } = String.Empty;
-    public int CookTime { get; set; }
-    public int ServingQuantity { get; set; }
+    public int? CookTime { get; set; }
+    public int? ServingQuantity { get; set; }
 
     public ICollection<TagDTO> Tags { get; set; } = [];
 }

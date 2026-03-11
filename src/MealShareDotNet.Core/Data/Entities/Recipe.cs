@@ -5,7 +5,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 [ExcludeFromCodeCoverage]
 public class Recipe
 {
-    public long? ID { get; set; }
+    public long ID { get; set; }
 
     public string Name { get; set; } = String.Empty;
     public int? CookTime { get; set; }

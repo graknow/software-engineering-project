@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MealShareDotNet.Core.Repositories;
+using MealShareDotNet.Core.Services;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Requests;
@@ -9,14 +9,15 @@ using MealShareDotNet.Server.Auth;
 namespace MealShareDotNet.Server.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("v1/recipes")]
 public class RecipeControllerV1 : ControllerBase
 {
-    private readonly IRecipeRepository _recipes;
+    private readonly IRecipeService _recipes;
 
     public const int MAX_PAGE_SIZE = 100;
 
-    public RecipeControllerV1(IRecipeRepository recipes)
+    public RecipeControllerV1(IRecipeService recipes)
     {
         _recipes = recipes;
     }
@@ -41,7 +42,9 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        return Ok(await _recipes.GetRecipeListingsAsync(pager));
+        var offset = pager.PageSize * (pager.PageNumber - 1);
+
+        return Ok(await _recipes.GetRecipeListingsAsync(pager.PageSize, offset));
     }
 
     [HttpGet("{id}")]
@@ -49,7 +52,7 @@ public class RecipeControllerV1 : ControllerBase
             long id
             )
     {
-        return Ok(_recipes.GetRecipeById(id));
+        return Ok(await _recipes.GetRecipeAsync(id));
     }
 
     [HttpPost]
@@ -65,8 +68,14 @@ public class RecipeControllerV1 : ControllerBase
             long id
             )
     {
-        _recipes.DeleteRecipe(id);
-        return Ok();
+        var success = await _recipes.DeleteRecipeAsync(id);
+
+        if (!success)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        return NoContent();
     }
 
     [HttpPut("{id}")]

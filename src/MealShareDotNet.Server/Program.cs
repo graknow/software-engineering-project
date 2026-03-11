@@ -55,7 +55,8 @@ if (connString is null)
 
 var fullConnString = ConnectionStringUtil.GenerateConnectionString(connString);
 
-builder.Services.AddTransient<IRecipeRepository>(s => new DbRecipeRepository(fullConnString));
+builder.Services.AddTransient<IRecipeRepository>(s => new SqliteRecipeRepository(fullConnString));
+builder.Services.AddTransient<IRecipeService, RepositoryRecipeService>();
 
 var migrationService = new MigrationService(fullConnString, "Migrations");
 migrationService.Migrate();

@@ -1,27 +1,29 @@
 using Microsoft.Data.Sqlite;
 using Dapper;
-using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
-using MealShareDotNet.Core.Data.Requests;
 
 namespace MealShareDotNet.Core.Repositories;
 
-public class DbRecipeRepository : IRecipeRepository
+public class SqliteRecipeRepository : IRecipeRepository
 {
     private readonly string _connectionString;
 
     private SqliteConnection _connection => new SqliteConnection(_connectionString);
 
-    public DbRecipeRepository(string connString)
+    public SqliteRecipeRepository(string connString)
     {
         _connectionString = connString;
     }
 
-    public Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(PageableParams pager)
+    public Task<IEnumerable<Recipe>> SearchRecipesAsync(
+            string? query,
+            uint? pageSize,
+            uint? pageOffset
+            )
     {
         var sql = """
             SELECT
-            Recipe.ID,
+                Recipe.ID,
                 Recipe.Name,
                 Recipe.CookTime,
                 Recipe.ServingQuantity
@@ -33,16 +35,16 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            return conn.QueryAsync<RecipeListingDTO>(sql,
+            return conn.QueryAsync<Recipe>(sql,
                     new
                     {
-                        PageSize = pager.PageSize,
-                        PageOffset = pager.PageSize * (pager.PageNumber - 1)
+                        PageSize = pageSize,
+                        PageOffset = pageOffset
                     });
         }
     }
 
-    public RecipeDTO? GetRecipeById(long id)
+    public Task<Recipe?> GetRecipeByIdAsync(long id)
     {
         var sql = """
             SELECT
@@ -94,15 +96,16 @@ public class DbRecipeRepository : IRecipeRepository
 
             using (var results = conn.QueryMultiple(sql, new { ID = id }))
             {
-                var recipe = results.ReadSingleOrDefault<RecipeDTO>();
+                // TODO: Proper async slop
+                var recipe = results.ReadSingleOrDefault<Recipe>();
                 if (recipe is null)
                 {
-                    return null;
+                    return Task.FromResult<Recipe?>(null);
                 }
 
-                recipe.Ingredients = results.Read<IngredientDTO>().ToList();
-                recipe.Tags = results.Read<TagDTO>().ToList();
-                return recipe;
+                recipe.Ingredients = results.Read<Ingredient>().ToList();
+                recipe.Tags = results.Read<Tag>().ToList();
+                return Task.FromResult<Recipe?>(recipe);
             }
         }
     }
@@ -122,7 +125,7 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public void InsertRecipe(Recipe recipe)
+    public Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
         var sql = """
             INSERT INTO Recipes
@@ -135,29 +138,19 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            using (var trans = conn.BeginTransaction())
-            {
-                try
-                {
-                    var recipeTask = conn.ExecuteAsync(sql, new
+            return conn.QuerySingleAsync<Recipe>(sql, new
                     {
-                        Name = recipe.Name,
-                        CookTime = recipe.CookTime,
-                        Price = recipe.Price,
-                        ServingQuantity = recipe.ServingQuantity,
-                        Instructions = recipe.Instructions
+                    Name = recipe.Name,
+                    CookTime = recipe.CookTime,
+                    Price = recipe.Price,
+                    ServingQuantity = recipe.ServingQuantity,
+                    Instructions = recipe.Instructions
                     });
-                }
-                catch
-                {
-                    trans.Rollback();
-                    throw;
-                }
-            }
         }
+
     }
 
-    public Task DeleteRecipe(long id)
+    public Task DeleteRecipeAsync(long id)
     {
         var sql = """
             DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
@@ -185,12 +178,38 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public void UpdateRecipe(Recipe recipe)
+    public Recipe UpdateRecipe(Recipe recipe)
     {
-
+        return new();
     }
 
-    public Task<IngredientDTO?> GetIngredient(long id)
+    public Task<IEnumerable<Ingredient>> SearchIngredientsAsync(
+            string? query,
+            uint? pageSize,
+            uint? pageOffset
+            )
+    {
+        var sql = """
+            SELECT
+                Ingredient.ID,
+                Ingredient.Name
+            FROM Ingredients Ingredient
+            LIMIT @PageSize OFFSET @PageOffset;
+        """;
+
+        using (var conn = _connection)
+        {
+            conn.Open();
+
+            return conn.QueryAsync<Ingredient>(sql, new
+            {
+                PageSize = pageSize,
+                PageOffset = pageOffset
+            });
+        }
+    }
+
+    public Task<Ingredient?> GetIngredientByIdAsync(long id)
     {
         var sql = """
             SELECT
@@ -207,33 +226,11 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            return conn.QuerySingleOrDefaultAsync<IngredientDTO>(sql, new { ID = id });
+            return conn.QuerySingleOrDefaultAsync<Ingredient>(sql, new { ID = id });
         }
     }
 
-    public Task<IEnumerable<IngredientListingDTO>> GetIngredientListings(PageableParams pager)
-    {
-        var sql = """
-            SELECT
-                Ingredient.ID,
-                Ingredient.Name
-            FROM Ingredients Ingredient
-            LIMIT @PageSize OFFSET @PageOffset;
-            """;
-
-        using (var conn = _connection)
-        {
-            conn.Open();
-
-            return conn.QueryAsync<IngredientListingDTO>(sql, new
-            {
-                PageSize = pager.PageSize,
-                PageOffset = pager.PageSize * (pager.PageNumber - 1)
-            });
-        }
-    }
-
-    public Ingredient InsertIngredient(IngredientDTO ingredient)
+    public Ingredient InsertIngredient(Ingredient ingredient)
     {
         var sql = """
             INSERT INTO Ingredients
@@ -253,7 +250,7 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public void DeleteIngredient(long id)
+    public Task DeleteIngredientAsync(long id)
     {
         var sql = """
             DELETE FROM RecipeIngredient AS RT WHERE RT.IngredientID = @ID;
@@ -268,18 +265,19 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    conn.Execute(sql, new { ID = id });
-                    trans.Commit();
+                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                    return deleteTask.ContinueWith(_ => trans.Commit());
                 }
                 catch
                 {
                     trans.Rollback();
+                    throw;
                 }
             }
         }
     }
 
-    public Ingredient UpdateIngredient(IngredientDTO ingredient)
+    public Ingredient UpdateIngredient(Ingredient ingredient)
     {
         var sql = """
             UPDATE Ingredients AS Ingredient
@@ -298,7 +296,11 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public Task<IEnumerable<TagListingDTO>> GetTagListings(PageableParams pager)
+    public Task<IEnumerable<Tag>> SearchTagsAsync(
+            string? query,
+            uint? pageSize,
+            uint? pageOffset
+            )
     {
         var sql = """
             SELECT
@@ -313,15 +315,15 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            return conn.QueryAsync<TagListingDTO>(sql, new
+            return conn.QueryAsync<Tag>(sql, new
             {
-                PageSize = pager.PageSize,
-                PageOffset = pager.PageSize * (pager.PageNumber - 1)
+                PageSize = pageSize,
+                PageOffset = pageOffset
             });
         }
     }
 
-    public Task<TagDTO?> GetTag(long id)
+    public Task<Tag?> GetTagByIdAsync(long id)
     {
         var sql = """
             SELECT
@@ -336,11 +338,11 @@ public class DbRecipeRepository : IRecipeRepository
         {
             conn.Open();
 
-            return conn.QuerySingleOrDefaultAsync<TagDTO>(sql, new { ID = id });
+            return conn.QuerySingleOrDefaultAsync<Tag>(sql, new { ID = id });
         }
     }
 
-    public Tag InsertTag(TagDTO tag)
+    public Tag InsertTag(Tag tag)
     {
         var sql = """
             INSERT INTO Tags
@@ -360,7 +362,7 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public void DeleteTag(long id)
+    public Task DeleteTagAsync(long id)
     {
         var sql = """
             DELETE FROM RecipeTag AS RT WHERE RT.TagID = @ID;
@@ -375,8 +377,8 @@ public class DbRecipeRepository : IRecipeRepository
             {
                 try
                 {
-                    conn.Execute(sql, new { ID = id });
-                    trans.Commit();
+                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                    return deleteTask.ContinueWith(_ => trans.Commit());
                 }
                 catch
                 {
@@ -387,7 +389,7 @@ public class DbRecipeRepository : IRecipeRepository
         }
     }
 
-    public Tag UpdateTag(TagDTO tag)
+    public Tag UpdateTag(Tag tag)
     {
         var sql = """
             UPDATE Tags AS Tag
