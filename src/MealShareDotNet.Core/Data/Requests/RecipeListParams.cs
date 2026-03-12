@@ -5,5 +5,7 @@ namespace MealShareDotNet.Core.Data.Requests;
 [ExcludeFromCodeCoverage]
 public class RecipeListParams
 {
-    public string SearchQuery { get; set; } = String.Empty;
+    public string NameQuery { get; set; } = String.Empty;
+    public string IngredientQuery { get; set; } = String.Empty;
+    public IEnumerable<long> TagListQuery { get; set; } = [];
 }

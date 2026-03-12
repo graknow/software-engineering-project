@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using MealShareDotNet.Core.Data.DTOs;
+using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
 
@@ -36,16 +37,45 @@ public class RepositoryRecipeService : IRecipeService
         };
     }
 
+    public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
+    {
+        ValidateOrThrow(recipe);
+
+        foreach (var ingredient in recipe.Ingredients)
+        {
+            var entity = new Ingredient()
+            {
+                Name = ingredient.Name,
+            };
+
+            _db.InsertIngredient(entity);
+        }
+    }
+
     public async Task<bool> DeleteRecipeAsync(long id)
     {
         try
         {
+            // TODO: prevent deletion if included in a meal plan?
             await _db.DeleteRecipeAsync(id);
             return true;
         }
         catch (SqliteException)
         {
             return false;
+        }
+    }
+
+    private void ValidateOrThrow(RecipeDTO recipe)
+    {
+        if (String.IsNullOrWhiteSpace(recipe.Name))
+        {
+            // I dont like exceptions
+            throw new Exception("Recipe name is empty.");
+        }
+        else if (String.IsNullOrWhiteSpace(recipe.Instructions))
+        {
+            throw new Exception("Recipe instructions are empty.");
         }
     }
 }

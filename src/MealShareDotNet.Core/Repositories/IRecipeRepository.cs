@@ -11,7 +11,6 @@ public interface IRecipeRepository
             );
 
     Task<Recipe?> GetRecipeByIdAsync(long id);
-    Task<bool> RecipeExistsAsync(long id);
     Task<Recipe> InsertRecipeAsync(Recipe recipe);
     Task DeleteRecipeAsync(long id);
     Recipe UpdateRecipe(Recipe recipe);
