@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Dapper;
@@ -6,7 +7,8 @@ using MealShareDotNet.Core.Data.Entities;
 
 namespace MealShareDotNet.Core.Repositories;
 
-public class SqliteRecipeRepository : IRecipeRepository
+public class SqliteRecipeRepository :
+    IRecipeRepository, ITransactableRepository, IDisposable
 {
     private readonly string _connectionString;
 
@@ -20,9 +22,13 @@ public class SqliteRecipeRepository : IRecipeRepository
         }
     }
 
+    private IDbTransaction? _transaction;
+    private int _isDisposed;
+
     public SqliteRecipeRepository(string connString)
     {
         _connectionString = connString;
+        _transaction = _connection.BeginTransaction();
     }
 
     public Task<IEnumerable<Recipe>> SearchRecipesAsync(
@@ -36,7 +42,8 @@ public class SqliteRecipeRepository : IRecipeRepository
                 Recipe.ID,
                 Recipe.Name,
                 Recipe.CookTime,
-                Recipe.ServingQuantity
+                Recipe.ServingQuantity,
+                Recipe.UpdatedDate
             FROM Recipes Recipe
             LIMIT @PageSize OFFSET @PageOffset;
             """;
@@ -126,68 +133,63 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            return conn.ExecuteScalarAsync<bool>(sql, new { ID = id });
+            return _transaction!.Connection!.ExecuteScalarAsync<bool>(sql, new { ID = id });
         }
     }
 
-    public Task<Recipe> InsertRecipeAsync(Recipe recipe)
+    public async Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
         Validator.ValidateObject(recipe, new ValidationContext(recipe));
 
-        var baseSql = """
+        var sql = """
             INSERT INTO Recipes
             (Name, CookTime, Price, ServingQuantity, Instructions)
             VALUES
             (@Name, @CookTime, @Price, @ServingQuantity, @Instructions);
             """;
 
-        var sql = new StringBuilder("INSERT INTO Recipes");
+        var riSql = """
+            INSERT INTO RecipeIngredient
+            (RecipeID, IngredientID, Mass, Volume, Quantity)
+            VALUES
+            (@RecipeID, @IngredientID, @Mass, @Volume, @Quantity);
+            """;
 
+        var rtSql = """
+            INSERT INTO RecipeTag
+            (RecipeID, IngredientID)
+            VALUES
+            (@RecipeID, IngredientID);
+            """;
 
+        using var conn = _connection;
 
-        using (var conn = _connection)
-        using (var trans = conn.BeginTransaction())
+        var riTask = conn.ExecuteAsync(riSql, recipe.Ingredients);
+        var rtTask = conn.ExecuteAsync(rtSql, recipe.Tags);
+
+        await Task.WhenAll(riTask, rtTask);
+
+        return await _transaction!.Connection!.QuerySingleAsync<Recipe>(sql, new
         {
-            foreach (var ingredient in recipe.Ingredients.Where(i => i.ID is not null))
-            {
-                ingredient.ID = InsertIngredient(ingredient).ID;
-            }
-
-
-
-            return conn.QuerySingleAsync<Recipe>(sql, new
-            {
-                Name = recipe.Name,
-                CookTime = recipe.CookTime,
-                Price = recipe.Price,
-                ServingQuantity = recipe.ServingQuantity,
-                Instructions = recipe.Instructions
-            });
-        }
-
+            Name = recipe.Name,
+            CookTime = recipe.CookTime,
+            Price = recipe.Price,
+            ServingQuantity = recipe.ServingQuantity,
+            Instructions = recipe.Instructions
+        });
     }
 
     public Task DeleteRecipeAsync(long id)
     {
         var sql = """
-            DELETE FROM Recipes Recipe WHERE Recipe.ID = @ID;
-            DELETE FROM RecipeIngredient RI WHERE RI.RecipeID = @ID;
-            DELETE FROM RecipeTag RT WHERE RT.RecipeID = @ID;
+            DELETE FROM RecipeIngredient AS RI WHERE RI.RecipeID = @ID;
+            DELETE FROM RecipeTag AS RT WHERE RT.RecipeID = @ID;
+            DELETE FROM Recipes AS Recipe WHERE Recipe.ID = @ID;
             """;
 
         using (var conn = _connection)
-        using (var trans = conn.BeginTransaction())
         {
-            try
-            {
-                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                return deleteTask.ContinueWith(_ => trans.CommitAsync());
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
+            return _transaction!.Connection!.ExecuteAsync(sql, new { ID = id }, _transaction);
         }
     }
 
@@ -257,27 +259,14 @@ public class SqliteRecipeRepository : IRecipeRepository
     public Task DeleteIngredientAsync(long id)
     {
         var sql = """
-            DELETE FROM RecipeIngredient AS RT WHERE RT.IngredientID = @ID;
             DELETE FROM Ingredients AS Ingredient WHERE Ingredient.ID = @ID;
+            DELETE FROM RecipeIngredient AS RT WHERE RT.IngredientID = @ID;
             """;
 
-        using (var conn = _connection)
-        using (var trans = conn.BeginTransaction())
-        {
-            try
-            {
-                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                return deleteTask.ContinueWith(_ => trans.Commit());
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
-        }
+        return _transaction!.Connection!.ExecuteAsync(sql, new { ID = id }, _transaction);
     }
 
-    public Ingredient UpdateIngredient(Ingredient ingredient, long? recipeId = null)
+    public Ingredient UpdateIngredient(Ingredient ingredient)
     {
         var sql = """
             UPDATE Ingredients AS Ingredient
@@ -362,18 +351,8 @@ public class SqliteRecipeRepository : IRecipeRepository
             """;
 
         using (var conn = _connection)
-        using (var trans = conn.BeginTransaction())
         {
-            try
-            {
-                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                return deleteTask.ContinueWith(_ => trans.Commit());
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
+            return conn.ExecuteAsync(sql, new { ID = id }, _transaction);
         }
     }
 
@@ -391,6 +370,65 @@ public class SqliteRecipeRepository : IRecipeRepository
             var entity = conn.ExecuteScalar<Tag>(sql, tag);
 
             return entity!;
+        }
+    }
+
+    public void Commit()
+    {
+        if (_transaction is null)
+        {
+            throw new Exception("No transaction to commit.");
+        }
+
+        try
+        {
+            _transaction.Commit();
+        }
+        catch
+        {
+            _transaction.Rollback();
+            throw;
+        }
+        finally
+        {
+            _transaction.Dispose();
+            _transaction = _connection.BeginTransaction();
+        }
+    }
+
+    public void Rollback()
+    {
+        if (_transaction is null)
+        {
+            throw new Exception("No transaction to rollback.");
+        }
+
+        try
+        {
+            _transaction.Rollback();
+        }
+        finally
+        {
+            _transaction.Dispose();
+            _transaction = _connection.BeginTransaction();
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 0)
+        {
+            if (disposing)
+            {
+                _transaction?.Dispose();
+                _transaction = null;
+            }
         }
     }
 }

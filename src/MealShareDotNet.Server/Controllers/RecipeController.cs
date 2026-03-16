@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MealShareDotNet.Core.Services;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Data.Requests;
 using MealShareDotNet.Server.Auth;
 
@@ -44,7 +45,13 @@ public class RecipeControllerV1 : ControllerBase
 
         var offset = pager.PageSize * (pager.PageNumber - 1);
 
-        return Ok(await _recipes.GetRecipeListingsAsync(pager.PageSize, offset));
+        var query = new GetRecipeListingsQuery()
+        {
+            PageSize = pager.PageSize,
+            PageOffset = offset
+        };
+
+        return Ok(await _recipes.GetRecipeListingsAsync(query));
     }
 
     [HttpGet("{id}")]
@@ -52,7 +59,14 @@ public class RecipeControllerV1 : ControllerBase
             long id
             )
     {
-        return Ok(await _recipes.GetRecipeAsync(id));
+        var result = await _recipes.GetRecipeAsync(id);
+
+        if (result is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     [HttpPost]
@@ -68,14 +82,20 @@ public class RecipeControllerV1 : ControllerBase
             long id
             )
     {
-        var success = await _recipes.DeleteRecipeAsync(id);
-
-        if (!success)
+        try
         {
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+            var success = await _recipes.DeleteRecipeAsync(id);
+            if (!success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPut("{id}")]

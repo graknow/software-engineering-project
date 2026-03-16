@@ -7,4 +7,7 @@ public sealed class GetRecipeListingsQuery
     public string? Name { get; set; }
     public int? CookTime { get; set; }
     public InequalityDirection? CookTimeComparison { get; set; }
+
+    public uint? PageSize { get; set; }
+    public uint? PageOffset { get; set; }
 }

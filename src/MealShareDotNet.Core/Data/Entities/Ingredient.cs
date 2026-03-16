@@ -16,11 +16,15 @@ public class Ingredient
     [Required(AllowEmptyStrings = false)]
     public string Name { get; set; } = String.Empty;
 
+
+    public long? ParentID { get; set; }
+
+    public string? QuantityName { get; set; }
+
     /// <summary>Mass in tenths of a gram.</summary>
     public int? Mass { get; set; }
 
     /// <summary>Volume in tenths of a mL.</summary>
-
     public int? Volume { get; set; }
 
     public float? Quantity { get; set; }

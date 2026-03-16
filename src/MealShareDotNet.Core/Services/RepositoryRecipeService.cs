@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Data.Sqlite;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
 
@@ -14,9 +15,9 @@ public class RepositoryRecipeService : IRecipeService
         _db = db;
     }
 
-    public async Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(uint? pageSize, uint? pageOffset)
+    public async Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(GetRecipeListingsQuery query)
     {
-        var results = await _db.SearchRecipesAsync(null, pageSize, pageOffset);
+        var results = await _db.SearchRecipesAsync(null, query.PageSize, query.PageOffset);
 
         return results.Select(r => new RecipeListingDTO
                 {
@@ -24,6 +25,7 @@ public class RepositoryRecipeService : IRecipeService
                     Name = r.Name,
                     CookTime = r.CookTime,
                     ServingQuantity = r.ServingQuantity,
+                    UpdatedDate = r.UpdatedDate,
                     Tags = []
                 });
     }
@@ -32,10 +34,12 @@ public class RepositoryRecipeService : IRecipeService
     {
         var result = await _db.GetRecipeByIdAsync(id);
 
-        return result is null ? null : new() {
-            ID = result.ID,
-            Name = result.Name,
-        };
+        if (result is null)
+        {
+            return null;
+        }
+
+        return RecipeDTO.FromEntity(result);
     }
 
     public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
@@ -65,16 +69,39 @@ public class RepositoryRecipeService : IRecipeService
 
     public async Task<bool> DeleteRecipeAsync(long id)
     {
+        if (!await _db.RecipeExistsAsync(id))
+        {
+            throw new KeyNotFoundException("ID doesn't exist in the database.");
+        }
+
         try
         {
             // TODO: prevent deletion if included in a meal plan?
             await _db.DeleteRecipeAsync(id);
+
+            if (_db is ITransactableRepository tdb)
+            {
+                tdb.Commit();
+            }
+
             return true;
         }
-        catch (SqliteException)
+        catch (SqliteException ex)
         {
+            Console.WriteLine($"SQLException: {ex.Message}");
+
+            if (_db is ITransactableRepository tdb)
+            {
+                tdb.Rollback();
+            }
+
             return false;
         }
+    }
+
+    public async Task<RecipeDTO> UpdateRecipeAsync(RecipeDTO recipe)
+    {
+        return recipe;
     }
 
     private void ValidateOrThrow(RecipeDTO recipe)
