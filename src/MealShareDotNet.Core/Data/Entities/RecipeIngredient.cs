@@ -5,22 +5,18 @@ using System.Diagnostics.CodeAnalysis;
 namespace MealShareDotNet.Core.Data.Entities;
 
 [ExcludeFromCodeCoverage]
-[Table("Ingredients")]
-public class Ingredient
+[Table("RecipeIngredient")]
+public class RecipeIngredient
 {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public long? ID { get; set; }
+    public Recipe Recipe { get; set; } = default!;
 
+    public Ingredient Ingredient { get; set; } = default!;
 
-    [Required(AllowEmptyStrings = false)]
-    public string Name { get; set; } = String.Empty;
 
     /// <summary>Mass in tenths of a gram.</summary>
     public int? Mass { get; set; }
 
     /// <summary>Volume in tenths of a mL.</summary>
-
     public int? Volume { get; set; }
 
     public float? Quantity { get; set; }

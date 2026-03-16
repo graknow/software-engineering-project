@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using MealShareDotNet.Core.Data.Entities;
@@ -8,7 +10,15 @@ public class SqliteRecipeRepository : IRecipeRepository
 {
     private readonly string _connectionString;
 
-    private SqliteConnection _connection => new SqliteConnection(_connectionString);
+    private SqliteConnection _connection
+    {
+        get
+        {
+            var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            return connection;
+        }
+    }
 
     public SqliteRecipeRepository(string connString)
     {
@@ -33,8 +43,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             return conn.QueryAsync<Recipe>(sql,
                     new
                     {
@@ -44,8 +52,9 @@ public class SqliteRecipeRepository : IRecipeRepository
         }
     }
 
-    public Task<Recipe?> GetRecipeByIdAsync(long id)
+    public async Task<Recipe?> GetRecipeByIdAsync(long id)
     {
+        var builder = new SqlBuilder();
         var sql = """
             SELECT
                 Recipe.ID,
@@ -91,22 +100,18 @@ public class SqliteRecipeRepository : IRecipeRepository
             """;
 
         using (var conn = _connection)
+        using (var results = conn.QueryMultiple(sql, new { ID = id }))
         {
-            conn.Open();
-
-            using (var results = conn.QueryMultiple(sql, new { ID = id }))
+            // TODO: Proper async slop
+            var recipe = await results.ReadSingleOrDefaultAsync<Recipe>();
+            if (recipe is null)
             {
-                // TODO: Proper async slop
-                var recipe = results.ReadSingleOrDefault<Recipe>();
-                if (recipe is null)
-                {
-                    return Task.FromResult<Recipe?>(null);
-                }
-
-                recipe.Ingredients = results.Read<Ingredient>().ToList();
-                recipe.Tags = results.Read<Tag>().ToList();
-                return Task.FromResult<Recipe?>(recipe);
+                return null;
             }
+
+            recipe.Ingredients = (await results.ReadAsync<Ingredient>()).ToList();
+            recipe.Tags = (await results.ReadAsync<Tag>()).ToList();
+            return recipe;
         }
     }
 
@@ -127,25 +132,37 @@ public class SqliteRecipeRepository : IRecipeRepository
 
     public Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
-        var sql = """
+        Validator.ValidateObject(recipe, new ValidationContext(recipe));
+
+        var baseSql = """
             INSERT INTO Recipes
             (Name, CookTime, Price, ServingQuantity, Instructions)
             VALUES
             (@Name, @CookTime, @Price, @ServingQuantity, @Instructions);
             """;
 
+        var sql = new StringBuilder("INSERT INTO Recipes");
+
+
+
         using (var conn = _connection)
+        using (var trans = conn.BeginTransaction())
         {
-            conn.Open();
+            foreach (var ingredient in recipe.Ingredients.Where(i => i.ID is not null))
+            {
+                ingredient.ID = InsertIngredient(ingredient).ID;
+            }
+
+
 
             return conn.QuerySingleAsync<Recipe>(sql, new
-                    {
-                    Name = recipe.Name,
-                    CookTime = recipe.CookTime,
-                    Price = recipe.Price,
-                    ServingQuantity = recipe.ServingQuantity,
-                    Instructions = recipe.Instructions
-                    });
+            {
+                Name = recipe.Name,
+                CookTime = recipe.CookTime,
+                Price = recipe.Price,
+                ServingQuantity = recipe.ServingQuantity,
+                Instructions = recipe.Instructions
+            });
         }
 
     }
@@ -159,21 +176,17 @@ public class SqliteRecipeRepository : IRecipeRepository
             """;
 
         using (var conn = _connection)
+        using (var trans = conn.BeginTransaction())
         {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
+            try
             {
-                try
-                {
-                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                    return deleteTask.ContinueWith(_ => trans.CommitAsync());
-                }
-                catch
-                {
-                    trans.Rollback();
-                    throw;
-                }
+                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                return deleteTask.ContinueWith(_ => trans.CommitAsync());
+            }
+            catch
+            {
+                trans.Rollback();
+                throw;
             }
         }
     }
@@ -195,12 +208,10 @@ public class SqliteRecipeRepository : IRecipeRepository
                 Ingredient.Name
             FROM Ingredients Ingredient
             LIMIT @PageSize OFFSET @PageOffset;
-        """;
+            """;
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             return conn.QueryAsync<Ingredient>(sql, new
             {
                 PageSize = pageSize,
@@ -214,18 +225,13 @@ public class SqliteRecipeRepository : IRecipeRepository
         var sql = """
             SELECT
                 Ingredient.ID,
-                Ingredient.Name,
-                Ingredient.Mass,
-                Ingredient.Volume,
-                Ingredient.Quantity
+                Ingredient.Name
             FROM Ingredients Ingredient
             WHERE Ingredient.ID = @ID;
             """;
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             return conn.QuerySingleOrDefaultAsync<Ingredient>(sql, new { ID = id });
         }
     }
@@ -242,8 +248,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             var entity = conn.ExecuteScalar<Ingredient>(sql, ingredient);
 
             return entity!;
@@ -258,26 +262,22 @@ public class SqliteRecipeRepository : IRecipeRepository
             """;
 
         using (var conn = _connection)
+        using (var trans = conn.BeginTransaction())
         {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
+            try
             {
-                try
-                {
-                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                    return deleteTask.ContinueWith(_ => trans.Commit());
-                }
-                catch
-                {
-                    trans.Rollback();
-                    throw;
-                }
+                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                return deleteTask.ContinueWith(_ => trans.Commit());
+            }
+            catch
+            {
+                trans.Rollback();
+                throw;
             }
         }
     }
 
-    public Ingredient UpdateIngredient(Ingredient ingredient)
+    public Ingredient UpdateIngredient(Ingredient ingredient, long? recipeId = null)
     {
         var sql = """
             UPDATE Ingredients AS Ingredient
@@ -288,8 +288,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             var entity = conn.ExecuteScalar<Ingredient>(sql, ingredient);
 
             return entity!;
@@ -313,8 +311,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             return conn.QueryAsync<Tag>(sql, new
             {
                 PageSize = pageSize,
@@ -336,8 +332,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             return conn.QuerySingleOrDefaultAsync<Tag>(sql, new { ID = id });
         }
     }
@@ -354,8 +348,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             var entity = conn.ExecuteScalar<Tag>(sql, tag);
 
             return entity!;
@@ -370,21 +362,17 @@ public class SqliteRecipeRepository : IRecipeRepository
             """;
 
         using (var conn = _connection)
+        using (var trans = conn.BeginTransaction())
         {
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
+            try
             {
-                try
-                {
-                    var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
-                    return deleteTask.ContinueWith(_ => trans.Commit());
-                }
-                catch
-                {
-                    trans.Rollback();
-                    throw;
-                }
+                var deleteTask = conn.ExecuteAsync(sql, new { ID = id });
+                return deleteTask.ContinueWith(_ => trans.Commit());
+            }
+            catch
+            {
+                trans.Rollback();
+                throw;
             }
         }
     }
@@ -400,8 +388,6 @@ public class SqliteRecipeRepository : IRecipeRepository
 
         using (var conn = _connection)
         {
-            conn.Open();
-
             var entity = conn.ExecuteScalar<Tag>(sql, tag);
 
             return entity!;

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Data.Sqlite;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
@@ -41,15 +42,25 @@ public class RepositoryRecipeService : IRecipeService
     {
         ValidateOrThrow(recipe);
 
+        try
+        {
+            await _db.InsertRecipeAsync(new() {
+                    Name = recipe.Name,
+                    CookTime = recipe.CookTime,
+                    Price = recipe.Price,
+                    ServingQuantity = recipe.ServingQuantity
+                    });
+        }
+        catch (SqliteException)
+        {
+        }
+
         foreach (var ingredient in recipe.Ingredients)
         {
-            var entity = new Ingredient()
-            {
-                Name = ingredient.Name,
-            };
-
-            _db.InsertIngredient(entity);
+            _db.InsertIngredient(new() { Name = ingredient.Name });
         }
+
+        return new();
     }
 
     public async Task<bool> DeleteRecipeAsync(long id)
