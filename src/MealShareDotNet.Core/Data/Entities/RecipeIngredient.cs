@@ -8,9 +8,13 @@ namespace MealShareDotNet.Core.Data.Entities;
 [Table("RecipeIngredient")]
 public class RecipeIngredient
 {
-    public Recipe Recipe { get; set; } = default!;
+    [ForeignKey("Recipe")]
+    public long? RecipeID { get; set; }
+    public Recipe? Recipe { get; set; } = default!;
 
-    public Ingredient Ingredient { get; set; } = default!;
+    [ForeignKey("Ingredient")]
+    public long? IngredientID { get; set; }
+    public Ingredient? Ingredient { get; set; } = default!;
 
 
     /// <summary>Mass in tenths of a gram.</summary>

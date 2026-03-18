@@ -4,15 +4,45 @@ using System.Text;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Queries;
 
 namespace MealShareDotNet.Core.Repositories;
 
 public class SqliteRecipeRepository :
     IRecipeRepository, ITransactableRepository, IDisposable
 {
+    /// <summary>
+    /// Connection string to a Sqlite database.
+    /// </summary>
     private readonly string _connectionString;
 
-    private SqliteConnection _connection
+    private SqliteConnection? _connection;
+    private SqliteConnection _activeConnection
+    {
+        get
+        {
+            if (_transaction is null)
+            {
+                throw new Exception("Attempted to use the active connection without an active transaction.  Transactions must be managed by the caller.");
+            }
+
+            if (_connection is not null)
+            {
+                return _connection;
+            }
+
+            _connection = new SqliteConnection(_connectionString);
+            _connection.Open();
+
+            return _connection;
+        }
+    }
+
+    /// <summary>
+    /// <para>Connection builder separate from the executable connection, for use with queries that don't require transactions ever.</para>
+    /// <para>Must be managed by the caller through "using" or try-catch blocks.</para>
+    /// </summary>
+    private SqliteConnection _queryConnection
     {
         get
         {
@@ -23,19 +53,15 @@ public class SqliteRecipeRepository :
     }
 
     private IDbTransaction? _transaction;
+
     private int _isDisposed;
 
     public SqliteRecipeRepository(string connString)
     {
         _connectionString = connString;
-        _transaction = _connection.BeginTransaction();
     }
 
-    public Task<IEnumerable<Recipe>> SearchRecipesAsync(
-            string? query,
-            uint? pageSize,
-            uint? pageOffset
-            )
+    public Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query)
     {
         var sql = """
             SELECT
@@ -45,18 +71,22 @@ public class SqliteRecipeRepository :
                 Recipe.ServingQuantity,
                 Recipe.UpdatedDate
             FROM Recipes Recipe
-            LIMIT @PageSize OFFSET @PageOffset;
             """;
 
-        using (var conn = _connection)
+        if (query.PageSize is not null)
         {
-            return conn.QueryAsync<Recipe>(sql,
-                    new
-                    {
-                        PageSize = pageSize,
-                        PageOffset = pageOffset
-                    });
+            sql += "\nLIMIT @PageSize OFFSET @PageOffset";
         }
+
+        sql += ";";
+
+        using var conn = _queryConnection;
+        return conn.QueryAsync<Recipe>(sql,
+                new
+                {
+                    PageSize = query.PageSize,
+                    PageOffset = query.PageOffset
+                });
     }
 
     public async Task<Recipe?> GetRecipeByIdAsync(long id)
@@ -106,20 +136,19 @@ public class SqliteRecipeRepository :
             WHERE RT.RecipeID = @ID;
             """;
 
-        using (var conn = _connection)
-        using (var results = conn.QueryMultiple(sql, new { ID = id }))
-        {
-            // TODO: Proper async slop
-            var recipe = await results.ReadSingleOrDefaultAsync<Recipe>();
-            if (recipe is null)
-            {
-                return null;
-            }
+        using var results = _queryConnection.QueryMultiple(sql, new { ID = id });
 
-            recipe.Ingredients = (await results.ReadAsync<Ingredient>()).ToList();
-            recipe.Tags = (await results.ReadAsync<Tag>()).ToList();
-            return recipe;
+        // TODO: Proper async slop
+        var recipe = await results.ReadSingleOrDefaultAsync<Recipe>();
+        if (recipe is null)
+        {
+            return null;
         }
+
+        recipe.Ingredients = (await results.ReadAsync<Ingredient>()).ToList();
+        recipe.Tags = (await results.ReadAsync<Tag>()).ToList();
+        return recipe;
+
     }
 
     public Task<bool> RecipeExistsAsync(long id)
@@ -131,17 +160,15 @@ public class SqliteRecipeRepository :
             WHERE Recipe.ID = @ID;
             """;
 
-        using (var conn = _connection)
-        {
-            return _transaction!.Connection!.ExecuteScalarAsync<bool>(sql, new { ID = id });
-        }
+        using var conn = _queryConnection;
+        return conn.ExecuteScalarAsync<bool>(sql, new { ID = id });
     }
 
     public async Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
         Validator.ValidateObject(recipe, new ValidationContext(recipe));
 
-        var sql = """
+        var recipeSql = """
             INSERT INTO Recipes
             (Name, CookTime, Price, ServingQuantity, Instructions)
             VALUES
@@ -162,21 +189,22 @@ public class SqliteRecipeRepository :
             (@RecipeID, IngredientID);
             """;
 
-        using var conn = _connection;
-
-        var riTask = conn.ExecuteAsync(riSql, recipe.Ingredients);
-        var rtTask = conn.ExecuteAsync(rtSql, recipe.Tags);
-
-        await Task.WhenAll(riTask, rtTask);
-
-        return await _transaction!.Connection!.QuerySingleAsync<Recipe>(sql, new
+        await _activeConnection.ExecuteAsync(recipeSql, new
         {
+
             Name = recipe.Name,
             CookTime = recipe.CookTime,
             Price = recipe.Price,
             ServingQuantity = recipe.ServingQuantity,
             Instructions = recipe.Instructions
-        });
+        }, _transaction);
+
+        var riTask = _activeConnection.ExecuteAsync(riSql, recipe.Ingredients, _transaction);
+        var rtTask = _activeConnection.ExecuteAsync(rtSql, recipe.Tags, _transaction);
+
+        await Task.WhenAll(riTask, rtTask);
+
+        return new();
     }
 
     public Task DeleteRecipeAsync(long id)
@@ -187,10 +215,7 @@ public class SqliteRecipeRepository :
             DELETE FROM Recipes AS Recipe WHERE Recipe.ID = @ID;
             """;
 
-        using (var conn = _connection)
-        {
-            return _transaction!.Connection!.ExecuteAsync(sql, new { ID = id }, _transaction);
-        }
+        return _activeConnection.ExecuteAsync(sql, new { ID = id }, _transaction);
     }
 
     public Recipe UpdateRecipe(Recipe recipe)
@@ -373,6 +398,16 @@ public class SqliteRecipeRepository :
         }
     }
 
+    public void BeginTransaction()
+    {
+        if (_transaction is not null)
+        {
+            throw new Exception("A transaction is already created.  Commit or Rollback the transaction before creating a new one.");
+        }
+
+        _transaction = _activeConnection.BeginTransaction();
+    }
+
     public void Commit()
     {
         if (_transaction is null)
@@ -392,7 +427,9 @@ public class SqliteRecipeRepository :
         finally
         {
             _transaction.Dispose();
-            _transaction = _connection.BeginTransaction();
+            _transaction = null;
+            _connection?.Dispose();
+            _connection = null;
         }
     }
 
@@ -410,7 +447,9 @@ public class SqliteRecipeRepository :
         finally
         {
             _transaction.Dispose();
-            _transaction = _connection.BeginTransaction();
+            _transaction = null;
+            _connection?.Dispose();
+            _connection = null;
         }
     }
 
@@ -422,13 +461,18 @@ public class SqliteRecipeRepository :
 
     protected virtual void Dispose(bool disposing)
     {
-        if (Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 0)
+        if (Interlocked.CompareExchange(ref _isDisposed, 1, 0) != 0)
         {
-            if (disposing)
-            {
-                _transaction?.Dispose();
-                _transaction = null;
-            }
+            return;
+        }
+
+        if (disposing)
+        {
+            _transaction?.Dispose();
+            _transaction = null;
+
+            _connection?.Dispose();
+            _connection = null;
         }
     }
 }

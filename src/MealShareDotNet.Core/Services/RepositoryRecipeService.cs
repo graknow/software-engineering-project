@@ -17,17 +17,9 @@ public class RepositoryRecipeService : IRecipeService
 
     public async Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(GetRecipeListingsQuery query)
     {
-        var results = await _db.SearchRecipesAsync(null, query.PageSize, query.PageOffset);
+        var results = await _db.SearchRecipesAsync(query);
 
-        return results.Select(r => new RecipeListingDTO
-                {
-                    ID = r.ID,
-                    Name = r.Name,
-                    CookTime = r.CookTime,
-                    ServingQuantity = r.ServingQuantity,
-                    UpdatedDate = r.UpdatedDate,
-                    Tags = []
-                });
+        return results.Select(RecipeListingDTO.FromEntity);
     }
 
     public async Task<RecipeDTO?> GetRecipeAsync(long id)
@@ -44,8 +36,6 @@ public class RepositoryRecipeService : IRecipeService
 
     public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
     {
-        ValidateOrThrow(recipe);
-
         try
         {
             await _db.InsertRecipeAsync(new() {
@@ -102,18 +92,5 @@ public class RepositoryRecipeService : IRecipeService
     public async Task<RecipeDTO> UpdateRecipeAsync(RecipeDTO recipe)
     {
         return recipe;
-    }
-
-    private void ValidateOrThrow(RecipeDTO recipe)
-    {
-        if (String.IsNullOrWhiteSpace(recipe.Name))
-        {
-            // I dont like exceptions
-            throw new Exception("Recipe name is empty.");
-        }
-        else if (String.IsNullOrWhiteSpace(recipe.Instructions))
-        {
-            throw new Exception("Recipe instructions are empty.");
-        }
     }
 }

@@ -14,6 +14,18 @@ public class RecipeListingDTO
     public DateTime UpdatedDate { get; init; }
 
     public ICollection<TagDTO> Tags { get; set; } = [];
+
+    public static RecipeListingDTO FromEntity(Recipe recipe)
+    {
+        return new()
+        {
+            ID = recipe.ID,
+            CookTime = recipe.CookTime,
+            ServingQuantity = recipe.ServingQuantity,
+            UpdatedDate = recipe.UpdatedDate,
+            Tags = recipe.Tags.Select(TagDTO.FromEntity).ToList(),
+        };
+    }
 }
 
 [ExcludeFromCodeCoverage]

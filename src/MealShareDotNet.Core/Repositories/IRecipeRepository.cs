@@ -1,14 +1,11 @@
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Queries;
 
 namespace MealShareDotNet.Core.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<IEnumerable<Recipe>> SearchRecipesAsync(
-            string? query = null,
-            uint? pageSize = null,
-            uint? pageOffset = null
-            );
+    Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query);
 
     Task<bool> RecipeExistsAsync(long id);
     Task<Recipe?> GetRecipeByIdAsync(long id);

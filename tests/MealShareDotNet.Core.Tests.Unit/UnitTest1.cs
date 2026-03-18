@@ -1,4 +1,4 @@
-namespace MealShareDotNet.Core.Tests;
+namespace MealShareDotNet.Core.Tests.Unit;
 
 public class Tests
 {

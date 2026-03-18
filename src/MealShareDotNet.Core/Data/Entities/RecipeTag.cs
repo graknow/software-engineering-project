@@ -8,7 +8,11 @@ namespace MealShareDotNet.Core.Data.Entities;
 [Table("RecipeTag")]
 public class RecipeTag
 {
-    public Recipe Recipe { get; set; } = default!;
+    [ForeignKey("Recipe")]
+    public long? RecipeID { get; set; }
+    public Recipe? Recipe { get; set; }
 
-    public Tag Tag { get; set; } = default!;
+    [ForeignKey("Tag")]
+    public long? TagID { get; set; }
+    public Tag? Tag { get; set; }
 }
