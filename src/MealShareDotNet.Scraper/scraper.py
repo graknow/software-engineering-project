@@ -66,9 +66,9 @@ class ingredient(yaml.YAMLObject):
                 return float(quantity) * self.scale[val]
         return quantity
 
-site = sys.argv[1]
+sites = sys.argv[1]
 
-response = requests.get(site)
+response = requests.get(sites)
 
 recipe_json = json.loads(response.text)
 
