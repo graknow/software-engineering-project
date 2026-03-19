@@ -1,58 +1,58 @@
 # Volume in 1/10 mL, mass in 1/10 g
-- RecipeID: 0
-  IngredientID: 0
+- RecipeId: 0
+  IngredientId: 0
   Volume: 9464
-- RecipeID: 0
-  IngredientID: 1
+- RecipeId: 0
+  IngredientId: 1
   Volume: 2366
-- RecipeID: 0
-  IngredientID: 2
+- RecipeId: 0
+  IngredientId: 2
   Volume: 148
-- RecipeID: 0
-  IngredientID: 3
+- RecipeId: 0
+  IngredientId: 3
   Volume: 12
-- RecipeID: 0
-  IngredientID: 4
+- RecipeId: 0
+  IngredientId: 4
   Volume: 2366
-- RecipeID: 0
-  IngredientID: 5
+- RecipeId: 0
+  IngredientId: 5
   Quantity: 2
-- RecipeID: 0
-  IngredientID: 6
+- RecipeId: 0
+  IngredientId: 6
   Volume: 1183
-- RecipeID: 0
-  IngredientID: 7
+- RecipeId: 0
+  IngredientId: 7
   Volume: 591
-- RecipeID: 1
-  IngredientID: 8
+- RecipeId: 1
+  IngredientId: 8
   Quantity: 1
-- RecipeID: 1
-  IngredientID: 3
+- RecipeId: 1
+  IngredientId: 3
   Volume: 6
-- RecipeID: 1
-  IngredientID: 9
+- RecipeId: 1
+  IngredientId: 9
   Volume: 2
-- RecipeID: 1
-  IngredientID: 10
+- RecipeId: 1
+  IngredientId: 10
   Mass: 4536
-- RecipeID: 1
-  IngredientID: 11
+- RecipeId: 1
+  IngredientId: 11
   Volume: 4732
-- RecipeID: 2
-  IngredientID: 12
+- RecipeId: 2
+  IngredientId: 12
   Quantity: 2
-- RecipeID: 2
-  IngredientID: 8
+- RecipeId: 2
+  IngredientId: 8
   Volume: 49
-- RecipeID: 2
-  IngredientID: 13
+- RecipeId: 2
+  IngredientId: 13
   Volume: 591
-- RecipeID: 2
-  IngredientID: 14
+- RecipeId: 2
+  IngredientId: 14
   Volume: 49
-- RecipeID: 2
-  IngredientID: 15
+- RecipeId: 2
+  IngredientId: 15
   Volume: 3155
-- RecipeID: 2
-  IngredientID: 16
+- RecipeId: 2
+  IngredientId: 16
   Volume: 591

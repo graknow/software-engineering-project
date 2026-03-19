@@ -6,7 +6,6 @@ namespace MealShareDotNet.Core.Repositories;
 public interface IRecipeRepository
 {
     Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query);
-
     Task<bool> RecipeExistsAsync(long id);
     Task<Recipe?> GetRecipeByIdAsync(long id);
     Task<Recipe> InsertRecipeAsync(Recipe recipe);
@@ -14,26 +13,16 @@ public interface IRecipeRepository
     Recipe UpdateRecipe(Recipe recipe);
 
 
-    Task<IEnumerable<Ingredient>> SearchIngredientsAsync(
-            string? query = null,
-            uint? pageSize = null,
-            uint? pageOffset = null
-            );
-
+    Task<IEnumerable<Ingredient>> SearchIngredientsAsync(GetIngredientListingsQuery query);
     Task<Ingredient?> GetIngredientByIdAsync(long id);
-    Ingredient InsertIngredient(Ingredient ingredient);
+    Task<Ingredient> InsertIngredientAsync(Ingredient ingredient);
     Task DeleteIngredientAsync(long id);
     Ingredient UpdateIngredient(Ingredient ingredient);
 
 
-    Task<IEnumerable<Tag>> SearchTagsAsync(
-            string? query = null,
-            uint? pageSize = null,
-            uint? pageOffset = null
-            );
-
+    Task<IEnumerable<Tag>> SearchTagsAsync(GetTagListingsQuery query);
     Task<Tag?> GetTagByIdAsync(long id);
-    Tag InsertTag(Tag tag);
+    Task<Tag> InsertTagAsync(Tag tag);
     Task DeleteTagAsync(long id);
     Tag UpdateTag(Tag tag);
 }

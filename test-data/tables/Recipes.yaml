@@ -1,4 +1,4 @@
-- ID: 0
+- Id: 0
   Name: Biscotti
   Instructions: >-
     Mix flour, sugar, baking powder, salt in shortening.  Add eggs and milk and
@@ -6,7 +6,7 @@
     roll to form 1 1/2" to 2" length thin rolled pieces.  Shape into an "S."
     Place on cookie sheets 3/4" apart.  Bake at 375° 12-15 mins. or until
     lightly brown.
-- ID: 1
+- Id: 1
   Name: Cheese Straws
   ServingQuantity: 12
   Instructions: >-
@@ -17,7 +17,7 @@
     directions.  Press dough onto cookie sheets in 3-inch-long strips.  Bake
     12 minutes or until lightly browned.  Cool completely on wire rack.  Store
     tightly covered.
-- ID: 2
+- Id: 2
   Name: Grilled Banana Splits
   ServingQuantity: 4
   Instructions: "

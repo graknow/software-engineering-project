@@ -10,14 +10,14 @@ public class Ingredient
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
 
     [Required(AllowEmptyStrings = false)]
     public string Name { get; set; } = String.Empty;
 
 
-    public long? ParentID { get; set; }
+    public long? ParentId { get; set; }
 
     public string? QuantityName { get; set; }
 

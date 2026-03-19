@@ -9,10 +9,10 @@ namespace MealShareDotNet.Core.Data.Entities;
 public class RecipeTag
 {
     [ForeignKey("Recipe")]
-    public long? RecipeID { get; set; }
+    public long? RecipeId { get; set; }
     public Recipe? Recipe { get; set; }
 
     [ForeignKey("Tag")]
-    public long? TagID { get; set; }
+    public long? TagId { get; set; }
     public Tag? Tag { get; set; }
 }

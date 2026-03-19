@@ -1,5 +1,6 @@
 namespace MealShareDotNet.Core.Data.Common;
 
+// TODO: Move up to data dir?
 public enum InequalityDirection
 {
     EQUAL = 0,

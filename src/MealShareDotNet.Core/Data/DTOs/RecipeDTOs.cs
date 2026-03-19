@@ -6,7 +6,7 @@ namespace MealShareDotNet.Core.Data.DTOs;
 [ExcludeFromCodeCoverage]
 public class RecipeListingDTO
 {
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
     public string Name { get; set; } = String.Empty;
     public int? CookTime { get; set; }
@@ -19,7 +19,7 @@ public class RecipeListingDTO
     {
         return new()
         {
-            ID = recipe.ID,
+            Id = recipe.Id,
             CookTime = recipe.CookTime,
             ServingQuantity = recipe.ServingQuantity,
             UpdatedDate = recipe.UpdatedDate,
@@ -31,7 +31,7 @@ public class RecipeListingDTO
 [ExcludeFromCodeCoverage]
 public class RecipeDTO
 {
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
     public string Name { get; set; } = String.Empty;
     public int? CookTime { get; set; }
@@ -47,7 +47,7 @@ public class RecipeDTO
     {
         return new()
         {
-            ID = recipe.ID,
+            Id = recipe.Id,
             Name = recipe.Name,
             CookTime = recipe.CookTime,
             Price = recipe.Price,

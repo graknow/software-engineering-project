@@ -13,7 +13,7 @@ public class MigrationService
 {
     private class Migration
     {
-        public int ID { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; } = String.Empty;
     }
 
@@ -60,7 +60,7 @@ public class MigrationService
             .GetManifestResourceNames()
             .Select(MigrationFromResource)
             .Where(m => m is not null && !IsRollback(m.Name))
-            .OrderBy(m => m!.ID)!;
+            .OrderBy(m => m!.Id)!;
 
         IEnumerable<Migration> appliedMigrations = [];
 
@@ -72,7 +72,7 @@ public class MigrationService
             {
                 var sql = """
                     SELECT
-                        Migration.ID,
+                        Migration.Id,
                         Migration.Name
                     FROM Migrations Migration
                     ORDER BY Migration.ID ASC
@@ -86,7 +86,7 @@ public class MigrationService
             }
         }
 
-        if ((appliedMigrations.LastOrDefault()?.ID ?? -1) + 1 != appliedMigrations.Count()
+        if ((appliedMigrations.LastOrDefault()?.Id ?? -1) + 1 != appliedMigrations.Count()
                 || appliedMigrations.Count() > migrations.Count())
         {
             Console.WriteLine("Migration table is invalid.  Consider rebuilding the database.  Cancelling migrations...");
@@ -94,7 +94,7 @@ public class MigrationService
             return false;
         }
 
-        if ((migrations.LastOrDefault()?.ID ?? -1) + 1 != migrations.Count())
+        if ((migrations.LastOrDefault()?.Id ?? -1) + 1 != migrations.Count())
         {
             Console.WriteLine("Migration directory is not valid.  Ids should be consecutive integers.  Cancelling migrations...");
 
@@ -113,7 +113,7 @@ public class MigrationService
         {
             foreach (var m in migrations.ToArray()[appliedMigrations.Count()..])
             {
-                Console.WriteLine($"Applying migration Id: {m.ID} ({m.Name})...");
+                Console.WriteLine($"Applying migration Id: {m.Id} ({m.Name})...");
 
                 try
                 {
@@ -186,12 +186,12 @@ public class MigrationService
     private void RecordMigration(Migration migration)
     {
         var sql = """
-            INSERT INTO Migrations (ID, Name) VALUES (@ID, @Name);
+            INSERT INTO Migrations (Id, Name) VALUES (@Id, @Name);
             """;
 
         using (var conn = _connection)
         {
-            conn.Execute(sql, new { ID = migration.ID, Name = migration.Name });
+            conn.Execute(sql, new { Id = migration.Id, Name = migration.Name });
         }
     }
 
@@ -216,12 +216,12 @@ public class MigrationService
 
         return new Migration
         {
-            ID = int.Parse(resourceName[0..nameIndex]),
+            Id = int.Parse(resourceName[0..nameIndex]),
             Name = resourceName[(nameIndex + 1)..]
         };
     }
 
-    private string GetMigrationResourceName(Migration m) => $"{_migrationPrefix}.{m.ID}_{m.Name}.sql";
+    private string GetMigrationResourceName(Migration m) => $"{_migrationPrefix}.{m.Id}_{m.Name}.sql";
 
     private bool IsRollback(string fileName) => fileName.EndsWith("_rollback");
 }

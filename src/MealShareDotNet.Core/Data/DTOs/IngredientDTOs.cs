@@ -6,7 +6,7 @@ namespace MealShareDotNet.Core.Data.DTOs;
 [ExcludeFromCodeCoverage]
 public class IngredientDTO
 {
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
     public string Name { get; set; } = String.Empty;
 
@@ -23,7 +23,7 @@ public class IngredientDTO
 [ExcludeFromCodeCoverage]
 public class IngredientListingDTO
 {
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
     public string Name { get; set; } = String.Empty;
 }

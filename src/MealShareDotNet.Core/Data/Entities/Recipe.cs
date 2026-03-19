@@ -10,7 +10,7 @@ public class Recipe
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public long? ID { get; set; }
+    public long? Id { get; set; }
 
 
     [Required(AllowEmptyStrings = false)]

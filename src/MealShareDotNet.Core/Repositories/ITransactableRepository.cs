@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace MealShareDotNet.Core.Repositories;
 
 public interface ITransactableRepository

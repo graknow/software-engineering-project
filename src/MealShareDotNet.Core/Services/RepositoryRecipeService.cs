@@ -51,7 +51,7 @@ public class RepositoryRecipeService : IRecipeService
 
         foreach (var ingredient in recipe.Ingredients)
         {
-            _db.InsertIngredient(new() { Name = ingredient.Name });
+            await _db.InsertIngredientAsync(new() { Name = ingredient.Name });
         }
 
         return new();
