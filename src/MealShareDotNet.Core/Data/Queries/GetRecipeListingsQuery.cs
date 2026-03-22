@@ -8,6 +8,7 @@ public sealed class GetRecipeListingsQuery
     public int? CookTime { get; set; }
     public InequalityDirection? CookTimeComparison { get; set; }
 
-    public uint? PageSize { get; set; }
-    public uint? PageOffset { get; set; }
+    // TODO: Replace with pageable parameter as Pager
+    public int? PageSize { get; set; }
+    public int? PageOffset { get; set; }
 }

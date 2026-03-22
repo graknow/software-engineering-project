@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using YamlDotNet.Serialization;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
 
@@ -107,11 +108,30 @@ public class SqliteRecipeRepositoryTests
 
     [Test]
     [Parallelizable]
-    public async Task SearchRecipes_NoParameters_ReturnAll()
+    public async Task SearchRecipes_NullParameters_ReturnAll()
     {
         var recipes = await _recipeRepository.SearchRecipesAsync(new());
 
         Assert.That(recipes.Count(), Is.EqualTo(_recipes.Count()));
+    }
+
+    // TODO: Add more recipe test data
+    [TestCase(1, 1)]
+    [TestCase(2, 1)]
+    [Parallelizable]
+    public async Task SearchRecipes_PageableParameters_ReturnOnePage(int pageSize, int pageNumber)
+    {
+        var pageOffset = pageSize * (pageNumber - 1);
+        var query = new GetRecipeListingsQuery()
+        {
+            PageSize = pageSize,
+            PageOffset = pageOffset
+        };
+
+        var expecteds = _recipes.Skip(pageOffset).Take(pageSize);
+        var entities = await _recipeRepository.SearchRecipesAsync(query);
+
+        Assert.That(entities.Count(), Is.EqualTo(pageSize));
     }
 
     [Test]
@@ -138,6 +158,23 @@ public class SqliteRecipeRepositoryTests
         Assert.That(recipe!.Price, Is.EqualTo(input.Price));
         Assert.That(recipe!.RecipeIngredients.Count(), Is.EqualTo(input.RecipeIngredients.Count()));
         Assert.That(recipe!.RecipeTags.Count(), Is.EqualTo(input.RecipeTags.Count()));
+
+        foreach (var ri in recipe.RecipeIngredients)
+        {
+            var relatedRi = input.RecipeIngredients.First(rri => rri.IngredientId == ri.IngredientId);
+
+            Assert.That(ri.RecipeId, Is.EqualTo(relatedRi.RecipeId));
+            Assert.That(ri.Mass, Is.EqualTo(relatedRi.Mass));
+            Assert.That(ri.Volume, Is.EqualTo(relatedRi.Volume));
+            Assert.That(ri.Quantity, Is.EqualTo(relatedRi.Quantity));
+        }
+
+        foreach (var rt in recipe.RecipeTags)
+        {
+            var relatedRt = input.RecipeTags.First(rrt => rrt.TagId == rt.TagId);
+
+            Assert.That(rt.RecipeId, Is.EqualTo(relatedRt.RecipeId));
+        }
     }
 
     [Test]
@@ -167,11 +204,9 @@ public class SqliteRecipeRepositoryTests
         Assert.That(exists, Is.True);
     }
 
-    [Test]
-    public async Task DeleteRecipe_ValidId_RemovedFromDatabase()
+    [TestCase(1)]
+    public async Task DeleteRecipe_ValidId_RemovedFromDatabase(long id)
     {
-        var id = 1;
-
         bool exists;
 
         try
@@ -186,8 +221,22 @@ public class SqliteRecipeRepositoryTests
             _recipeRepository.Rollback();
         }
 
-
         Assert.That(exists, Is.False);
+    }
+
+    [TestCase(-1)]
+    [TestCase(25565)]
+    public void DeleteRecipe_InvalidId_KeyNotFoundException(long id)
+    {
+        try
+        {
+            _recipeRepository.BeginTransaction();
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await _recipeRepository.DeleteRecipeAsync(id));
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
     }
 
     [Test]
@@ -245,11 +294,29 @@ public class SqliteRecipeRepositoryTests
 
     [Test]
     [Parallelizable]
-    public async Task SearchIngredients_NoParameters_ReturnAll()
+    public async Task SearchIngredients_NullParameters_ReturnAll()
     {
         var ingredients = await _recipeRepository.SearchIngredientsAsync(new());
 
         Assert.That(ingredients.Count(), Is.EqualTo(_ingredients.Count()));
+    }
+
+    [TestCase(1, 1)]
+    [TestCase(2, 2)]
+    [Parallelizable]
+    public async Task SearchIngredients_PageableParameters_ReturnOnePage(int pageSize, int pageNumber)
+    {
+        var pageOffset = pageSize * (pageNumber - 1);
+        var query = new GetIngredientListingsQuery()
+        {
+            PageSize = pageSize,
+            PageOffset = pageOffset
+        };
+
+        var expecteds = _ingredients.Skip(pageOffset).Take(pageSize);
+        var entities = await _recipeRepository.SearchIngredientsAsync(query);
+
+        Assert.That(entities.Count(), Is.EqualTo(pageSize));
     }
 
     [Test]
@@ -275,6 +342,25 @@ public class SqliteRecipeRepositoryTests
                 ingredient?.Name,
                 Is.EqualTo(_ingredients.First(i => i.Id == id).Name)
                 );
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    [Parallelizable]
+    public async Task RecipeExists_ValidId_ReturnTrue(long id)
+    {
+        var exists = await _recipeRepository.RecipeExistsAsync(id);
+
+        Assert.That(exists, Is.True);
+    }
+
+    [TestCase(-1)]
+    [TestCase(25565)]
+    public async Task RecipeExists_InvalidId_ReturnFalse(long id)
+    {
+        var exists = await _recipeRepository.RecipeExistsAsync(id);
+
+        Assert.That(exists, Is.False);
     }
 
     [Test]
@@ -304,11 +390,9 @@ public class SqliteRecipeRepositoryTests
         Assert.That(result.Name, Is.EqualTo(ingredient.Name));
     }
 
-    [Test]
-    public async Task DeleteIngredient_ValidId_RemovedFromDatabase()
+    [TestCase(1)]
+    public async Task DeleteIngredient_ValidId_RemovedFromDatabase(long id)
     {
-        var id = 1;
-
         bool exists;
 
         try
@@ -324,6 +408,21 @@ public class SqliteRecipeRepositoryTests
         }
 
         Assert.That(exists, Is.False);
+    }
+
+    [TestCase(-1)]
+    [TestCase(25565)]
+    public void DeleteIngredient_InvalidId_KeyNotFoundException(long id)
+    {
+        try
+        {
+            _recipeRepository.BeginTransaction();
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await _recipeRepository.DeleteIngredientAsync(id));
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
     }
 
     [Test]
@@ -397,11 +496,9 @@ public class SqliteRecipeRepositoryTests
         Assert.That(result.Name, Is.EqualTo(tag.Name));
     }
 
-    [Test]
-    public async Task DeleteTag_ValidId_RemovedFromDatabase()
+    [TestCase(1)]
+    public async Task DeleteTag_ValidId_RemovedFromDatabase(long id)
     {
-        var id = 1;
-
         bool exists;
 
         try
@@ -417,6 +514,21 @@ public class SqliteRecipeRepositoryTests
         }
 
         Assert.That(exists, Is.False);
+    }
+
+    [TestCase(-1)]
+    [TestCase(25565)]
+    public void DeleteTag_InvalidId_KeyNotFoundException(long id)
+    {
+        try
+        {
+            _recipeRepository.BeginTransaction();
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await _recipeRepository.DeleteTagAsync(id));
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
     }
 
     [Test]

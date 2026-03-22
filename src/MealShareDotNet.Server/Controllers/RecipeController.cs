@@ -9,9 +9,9 @@ using MealShareDotNet.Server.Auth;
 
 namespace MealShareDotNet.Server.Controllers;
 
-[ApiController]
 [AllowAnonymous]
 [Route("v1/recipes")]
+[ApiController]
 public class RecipeControllerV1 : ControllerBase
 {
     private readonly IRecipeService _recipes;
@@ -74,7 +74,7 @@ public class RecipeControllerV1 : ControllerBase
             [FromBody] RecipeDTO recipe
             )
     {
-        return Ok();
+        return Ok(await _recipes.InsertRecipeAsync(recipe));
     }
 
     [HttpDelete("{id}")]

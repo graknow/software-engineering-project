@@ -46,6 +46,7 @@ public class SqliteRecipeRepository :
         _connectionString = connString;
     }
 
+    // TODO: Proper search parameters, like tags, ingredients, etc
     public Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query)
     {
         var sql = """
@@ -55,7 +56,7 @@ public class SqliteRecipeRepository :
                 Recipe.CookTime,
                 Recipe.ServingQuantity,
                 Recipe.UpdatedDate
-            FROM Recipes Recipe
+            FROM Recipes AS Recipe
             """;
 
         if (query.PageSize is not null)
@@ -202,9 +203,9 @@ public class SqliteRecipeRepository :
 
         var rtSql = """
             INSERT INTO RecipeTag
-            (RecipeId, IngredientId)
+            (RecipeId, TagId)
             VALUES
-            (@RecipeId, @IngredientId);
+            (@RecipeId, @TagId);
             """;
 
         var result = await _activeConnection.QuerySingleAsync<Recipe>(recipeSql, new
@@ -216,8 +217,22 @@ public class SqliteRecipeRepository :
             Instructions = recipe.Instructions
         }, _transaction);
 
-        var riTask = _activeConnection.ExecuteAsync(riSql, recipe.RecipeIngredients, _transaction);
-        var rtTask = _activeConnection.ExecuteAsync(rtSql, recipe.RecipeTags, _transaction);
+        foreach (var ri in recipe.RecipeIngredients)
+        {
+            result.RecipeIngredients.Add(ri);
+            ri.RecipeId = result.Id;
+            ri.Recipe = result;
+        }
+
+        foreach (var rt in recipe.RecipeTags)
+        {
+            result.RecipeTags.Add(rt);
+            rt.RecipeId = result.Id;
+            rt.Recipe = result;
+        }
+
+        var riTask = _activeConnection.ExecuteAsync(riSql, result.RecipeIngredients, _transaction);
+        var rtTask = _activeConnection.ExecuteAsync(rtSql, result.RecipeTags, _transaction);
 
         await Task.WhenAll(riTask, rtTask);
 

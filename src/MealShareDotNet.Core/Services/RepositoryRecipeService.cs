@@ -36,25 +36,94 @@ public class RepositoryRecipeService : IRecipeService
 
     public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
     {
+        var entity = new Recipe()
+        {
+            Name = recipe.Name,
+            CookTime = recipe.CookTime,
+            Price = recipe.Price,
+            ServingQuantity = recipe.ServingQuantity,
+            Instructions = recipe.Instructions,
+        };
+
+        var transactable = _db as ITransactableRepository;
+
         try
         {
-            await _db.InsertRecipeAsync(new() {
-                    Name = recipe.Name,
-                    CookTime = recipe.CookTime,
-                    Price = recipe.Price,
-                    ServingQuantity = recipe.ServingQuantity
-                    });
-        }
-        catch (SqliteException)
-        {
-        }
+            transactable?.BeginTransaction();
 
-        foreach (var ingredient in recipe.Ingredients)
-        {
-            await _db.InsertIngredientAsync(new() { Name = ingredient.Name });
-        }
+            // TODO: Proper async slop
+            // TODO: Check ingredient/tag name similarities and raise exception if similar (Handled in client)
+            foreach (var ingredient in recipe.Ingredients.Where(i => i.Id is null))
+            {
+                var ingredientEntity = new Ingredient()
+                {
+                    Name = ingredient.Name,
+                };
 
-        return new();
+                ingredientEntity = await _db.InsertIngredientAsync(ingredientEntity);
+
+                ingredient.Id = ingredientEntity.Id;
+            }
+
+            foreach (var tag in recipe.Tags.Where(t => t.Id is null))
+            {
+                var tagEntity = new Tag()
+                {
+                    Name = tag.Name,
+                    Description = tag.Description
+                };
+
+                tagEntity = await _db.InsertTagAsync(tagEntity);
+
+                tag.Id = tagEntity.Id;
+            }
+
+            // TODO: perhaps move this logic to recipe repository?
+            foreach (var ingredient in recipe.Ingredients)
+            {
+                var ri = new RecipeIngredient()
+                {
+                    IngredientId = ingredient.Id,
+                    Ingredient = new Ingredient()
+                    {
+                        Id = ingredient.Id,
+                        Name = ingredient.Name
+                    },
+                    Mass = ingredient.Mass,
+                    Volume = ingredient.Volume,
+                    Quantity = ingredient.Quantity
+                };
+
+                entity.RecipeIngredients.Add(ri);
+            }
+
+            foreach (var tag in recipe.Tags)
+            {
+                var rt = new RecipeTag()
+                {
+                    TagId = tag.Id,
+                    Tag = new Tag()
+                    {
+                        Id = tag.Id,
+                        Name = tag.Name,
+                        Description = tag.Description
+                    }
+                };
+
+                entity.RecipeTags.Add(rt);
+            }
+
+            var result = await _db.InsertRecipeAsync(entity);
+
+            transactable?.Commit();
+
+            return RecipeDTO.FromEntity(result);
+        }
+        catch
+        {
+            transactable?.Rollback();
+            throw;
+        }
     }
 
     public async Task<bool> DeleteRecipeAsync(long id)
