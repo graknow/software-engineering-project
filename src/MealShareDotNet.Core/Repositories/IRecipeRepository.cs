@@ -10,19 +10,19 @@ public interface IRecipeRepository
     Task<Recipe?> GetRecipeByIdAsync(long id);
     Task<Recipe> InsertRecipeAsync(Recipe recipe);
     Task DeleteRecipeAsync(long id);
-    Recipe UpdateRecipe(Recipe recipe);
+    Task<Recipe> UpdateRecipeAsync(Recipe recipe);
 
 
     Task<IEnumerable<Ingredient>> SearchIngredientsAsync(GetIngredientListingsQuery query);
     Task<Ingredient?> GetIngredientByIdAsync(long id);
     Task<Ingredient> InsertIngredientAsync(Ingredient ingredient);
     Task DeleteIngredientAsync(long id);
-    Ingredient UpdateIngredient(Ingredient ingredient);
+    Task<Ingredient> UpdateIngredientAsync(Ingredient ingredient);
 
 
     Task<IEnumerable<Tag>> SearchTagsAsync(GetTagListingsQuery query);
     Task<Tag?> GetTagByIdAsync(long id);
     Task<Tag> InsertTagAsync(Tag tag);
     Task DeleteTagAsync(long id);
-    Tag UpdateTag(Tag tag);
+    Task<Tag> UpdateTagAsync(Tag tag);
 }

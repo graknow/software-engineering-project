@@ -18,11 +18,11 @@ public class SqliteRecipeRepositoryTests
 
     private IDbConnection _connection = default!;
 
-    private IEnumerable<Recipe> _recipes = [];
-    private IEnumerable<Ingredient> _ingredients = [];
-    private IEnumerable<Tag> _tags = [];
-    private IEnumerable<RecipeIngredient> _ris = [];
-    private IEnumerable<RecipeTag> _rts = [];
+    private static IEnumerable<Recipe> _recipes = [];
+    private static IEnumerable<Ingredient> _ingredients = [];
+    private static IEnumerable<Tag> _tags = [];
+    private static IEnumerable<RecipeIngredient> _ris = [];
+    private static IEnumerable<RecipeTag> _rts = [];
 
     [OneTimeSetUp]
     public void SetUpAll()
@@ -48,6 +48,26 @@ public class SqliteRecipeRepositoryTests
         _rts = deserializer.Deserialize<IEnumerable<RecipeTag>>(
                 new StreamReader("test-data/tables/RecipeTag.yaml")
                 );
+
+        foreach (var recipe in _recipes)
+        {
+            recipe.RecipeIngredients = _ris.Where(ri => ri.RecipeId == recipe.Id).ToList();
+            recipe.RecipeTags = _rts.Where(rt => rt.RecipeId == recipe.Id).ToList();
+        }
+
+        foreach (var ri in _ris)
+        {
+            var relatedIngredient = _ingredients.Single(i => i.Id == ri.IngredientId);
+            ri.Ingredient = relatedIngredient;
+            ri.IngredientId = relatedIngredient.Id;
+        }
+
+        foreach (var rt in _rts)
+        {
+            var relatedTag = _tags.Single(t => t.Id == rt.TagId);
+            rt.Tag = relatedTag;
+            rt.TagId = relatedTag.Id;
+        }
 
         _connection = new SqliteConnection(_testConnectionString);
         _connection.Open();
@@ -103,11 +123,21 @@ public class SqliteRecipeRepositoryTests
         Assert.That(recipe, Is.Null);
     }
 
-    [Test]
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(2)]
     [Parallelizable]
-    public async Task GetRecipeById_ValidId_ReturnFullRecipe()
+    public async Task GetRecipeById_ValidId_ReturnFullRecipe(long id)
     {
-        Assert.Pass();
+        var recipe = await _recipeRepository.GetRecipeByIdAsync(id);
+        var input = _recipes.First(r => r.Id == id);
+
+        Assert.That(recipe, Is.Not.Null);
+        Assert.That(recipe!.Name, Is.EqualTo(input.Name));
+        Assert.That(recipe!.CookTime, Is.EqualTo(input.CookTime));
+        Assert.That(recipe!.Price, Is.EqualTo(input.Price));
+        Assert.That(recipe!.RecipeIngredients.Count(), Is.EqualTo(input.RecipeIngredients.Count()));
+        Assert.That(recipe!.RecipeTags.Count(), Is.EqualTo(input.RecipeTags.Count()));
     }
 
     [Test]
@@ -158,6 +188,59 @@ public class SqliteRecipeRepositoryTests
 
 
         Assert.That(exists, Is.False);
+    }
+
+    [Test]
+    public async Task UpdateRecipe_ValidRecipe_UpdatedInDatabase()
+    {
+        var recipe = _recipes.First();
+
+        var updated = new Recipe()
+        {
+            Id = recipe.Id,
+            Name = recipe.Name + "Updated",
+            CookTime = recipe.CookTime + 1,
+            Price = recipe.Price + 1,
+            ServingQuantity = recipe.ServingQuantity + 1,
+            Instructions = recipe.Instructions,
+            RecipeIngredients = _ris
+                .Select(ri =>
+                {
+                    ri.Recipe = recipe;
+                    ri.RecipeId = recipe.Id;
+                    return ri;
+                }).Take(4).ToList(),
+            RecipeTags = _rts
+                .Select(rt =>
+                {
+                    rt.Recipe = recipe;
+                    rt.RecipeId = recipe.Id;
+                    return rt;
+                }).Take(2).ToList(),
+        };
+
+        Recipe result;
+
+        try
+        {
+            _recipeRepository.BeginTransaction();
+
+            result = await _recipeRepository.UpdateRecipeAsync(updated);
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
+
+
+        Assert.That(result.Name, Is.EqualTo(updated.Name));
+        Assert.That(result.CookTime, Is.EqualTo(updated.CookTime));
+        Assert.That(result.Price, Is.EqualTo(updated.Price));
+        Assert.That(result.ServingQuantity, Is.EqualTo(updated.ServingQuantity));
+        Assert.That(result.Instructions, Is.EqualTo(updated.Instructions));
+
+        Assert.That(result.RecipeIngredients.Count(), Is.EqualTo(updated.RecipeIngredients.Count()));
+        Assert.That(result.RecipeTags.Count(), Is.EqualTo(updated.RecipeTags.Count()));
     }
 
     [Test]
@@ -244,6 +327,31 @@ public class SqliteRecipeRepositoryTests
     }
 
     [Test]
+    public async Task UpdateIngredient_ValidIngredient_UpdatedInDatabase()
+    {
+        var ingredient = _ingredients.First();
+        var updated = new Ingredient()
+        {
+            Id = ingredient.Id,
+            Name = ingredient.Name + "Updated",
+        };
+
+        Ingredient entity;
+
+        try
+        {
+            _recipeRepository.BeginTransaction();
+            entity = await _recipeRepository.UpdateIngredientAsync(updated);
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
+
+        Assert.That(entity.Name, Is.EqualTo(updated.Name));
+    }
+
+    [Test]
     [Parallelizable]
     public async Task SearchTags_NoParameters_ReturnAll()
     {
@@ -300,8 +408,8 @@ public class SqliteRecipeRepositoryTests
         {
             _recipeRepository.BeginTransaction();
 
-            await _recipeRepository.DeleteIngredientAsync(id);
-            exists = (await _recipeRepository.GetIngredientByIdAsync(id)) is not null;
+            await _recipeRepository.DeleteTagAsync(id);
+            exists = (await _recipeRepository.GetTagByIdAsync(id)) is not null;
         }
         finally
         {
@@ -309,5 +417,32 @@ public class SqliteRecipeRepositoryTests
         }
 
         Assert.That(exists, Is.False);
+    }
+
+    [Test]
+    public async Task UpdateTag_ValidTag_UpdatedInDatabase()
+    {
+        var tag = _tags.First();
+        var updated = new Tag()
+        {
+            Id = tag.Id,
+            Name = tag.Name + "Updated",
+            Description = tag.Description ?? String.Empty + "Updated"
+        };
+
+        Tag entity;
+
+        try
+        {
+            _recipeRepository.BeginTransaction();
+            entity = await _recipeRepository.UpdateTagAsync(updated);
+        }
+        finally
+        {
+            _recipeRepository.Rollback();
+        }
+
+        Assert.That(entity.Name, Is.EqualTo(updated.Name));
+        Assert.That(entity.Description, Is.EqualTo(updated.Description));
     }
 }

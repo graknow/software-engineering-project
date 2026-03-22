@@ -33,7 +33,9 @@ public class Recipe
 
 
     // Joins
-    public ICollection<Ingredient> Ingredients { get; set; } = [];
+    [NotMapped]
+    public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = [];
 
-    public ICollection<Tag> Tags { get; set; } = [];
+    [NotMapped]
+    public ICollection<RecipeTag> RecipeTags { get; set; } = [];
 }

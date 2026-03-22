@@ -9,23 +9,18 @@ namespace MealShareDotNet.Core.Data.Entities;
 public class Ingredient
 {
     [Key]
+    [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long? Id { get; set; }
-
 
     [Required(AllowEmptyStrings = false)]
     public string Name { get; set; } = String.Empty;
 
-
     public long? ParentId { get; set; }
 
-    public string? QuantityName { get; set; }
+    [NotMapped]
+    public RecipeIngredient? RecipeIngredient { get; set; }
 
-    /// <summary>Mass in tenths of a gram.</summary>
-    public int? Mass { get; set; }
-
-    /// <summary>Volume in tenths of a mL.</summary>
-    public int? Volume { get; set; }
-
-    public float? Quantity { get; set; }
+    [NotMapped]
+    public long? RecipeId => RecipeIngredient?.RecipeId;
 }

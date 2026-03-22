@@ -9,10 +9,12 @@ namespace MealShareDotNet.Core.Data.Entities;
 public class RecipeIngredient
 {
     [ForeignKey("Recipe")]
+    [Required]
     public long? RecipeId { get; set; }
     public Recipe? Recipe { get; set; } = default!;
 
     [ForeignKey("Ingredient")]
+    [Required]
     public long? IngredientId { get; set; }
     public Ingredient? Ingredient { get; set; } = default!;
 
@@ -24,4 +26,6 @@ public class RecipeIngredient
     public int? Volume { get; set; }
 
     public float? Quantity { get; set; }
+
+    public string? QuantityName { get; set; }
 }

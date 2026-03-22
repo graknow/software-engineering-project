@@ -91,26 +91,38 @@ public class SqliteRecipeRepository :
             WHERE Recipe.Id = @Id;
 
             SELECT
-                Ingredient.Id,
-                Ingredient.Name,
+                RI.RecipeId,
+                RI.IngredientId,
                 RI.Mass,
                 RI.Volume,
                 RI.Quantity
-            FROM RecipeIngredient RI
+            FROM RecipeIngredient AS RI
+            WHERE RI.RecipeId = @Id;
+
+            SELECT
+                Ingredient.Id,
+                Ingredient.Name
+            FROM RecipeIngredient AS RI
             LEFT OUTER JOIN
             (
                 SELECT
-                    I.ID,
+                    I.Id,
                     I.Name
                 FROM Ingredients I
             ) AS Ingredient ON Ingredient.Id = RI.IngredientId
             WHERE RI.RecipeId = @Id;
 
             SELECT
+                RT.RecipeId,
+                RT.TagId
+            FROM RecipeTag AS RT
+            WHERE RT.RecipeId = @Id;
+
+            SELECT
                 Tag.Id,
                 Tag.Name,
                 Tag.Description
-            FROM RecipeTag RT
+            FROM RecipeTag AS RT
             LEFT OUTER JOIN
             (
                 SELECT
@@ -133,10 +145,26 @@ public class SqliteRecipeRepository :
             return null;
         }
 
-        recipe.Ingredients = (await results.ReadAsync<Ingredient>()).ToList();
-        recipe.Tags = (await results.ReadAsync<Tag>()).ToList();
-        return recipe;
+        recipe.RecipeIngredients = (await results.ReadAsync<RecipeIngredient>()).ToList();
+        var ingredients = await results.ReadAsync<Ingredient>();
+        recipe.RecipeTags = (await results.ReadAsync<RecipeTag>()).ToList();
+        var tags = await results.ReadAsync<Tag>();
 
+        foreach (var ingredient in ingredients)
+        {
+            var ri = recipe.RecipeIngredients.Single(ri => ri.IngredientId == ingredient.Id);
+
+            ri.Ingredient = ingredient;
+        }
+
+        foreach (var tag in tags)
+        {
+            var rt = recipe.RecipeTags.Single(rt => rt.TagId == tag.Id);
+
+            rt.Tag = tag;
+        }
+
+        return recipe;
     }
 
     public Task<bool> RecipeExistsAsync(long id)
@@ -188,15 +216,15 @@ public class SqliteRecipeRepository :
             Instructions = recipe.Instructions
         }, _transaction);
 
-        var riTask = _activeConnection.ExecuteAsync(riSql, recipe.Ingredients, _transaction);
-        var rtTask = _activeConnection.ExecuteAsync(rtSql, recipe.Tags, _transaction);
+        var riTask = _activeConnection.ExecuteAsync(riSql, recipe.RecipeIngredients, _transaction);
+        var rtTask = _activeConnection.ExecuteAsync(rtSql, recipe.RecipeTags, _transaction);
 
         await Task.WhenAll(riTask, rtTask);
 
         return result;
     }
 
-    public Task DeleteRecipeAsync(long id)
+    public async Task DeleteRecipeAsync(long id)
     {
         var sql = """
             DELETE FROM RecipeIngredient AS RI WHERE RI.RecipeId = @Id;
@@ -204,12 +232,85 @@ public class SqliteRecipeRepository :
             DELETE FROM Recipes AS Recipe WHERE Recipe.Id = @Id;
             """;
 
-        return _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
+        var rowsAffected = await _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
+
+        if (rowsAffected == 0)
+        {
+            throw new KeyNotFoundException($"Recipe Id \"{id}\" not found, deletion impossible");
+        }
     }
 
-    public Recipe UpdateRecipe(Recipe recipe)
+    public async Task<Recipe> UpdateRecipeAsync(Recipe recipe)
     {
-        return new();
+        Validator.ValidateObject(recipe, new ValidationContext(recipe));
+        // TODO: validate tags and ingredients if anyone cares
+
+        var id = recipe.Id ?? throw new Exception("Not throwable");
+
+        var entity = await GetRecipeByIdAsync(id);
+
+        if (entity is null)
+        {
+            throw new KeyNotFoundException(recipe.Id.ToString());
+        }
+
+        // good time complexity sir
+        IEnumerable<RecipeIngredient> delRis = entity.RecipeIngredients
+            .ExceptBy<RecipeIngredient, long?>(
+                    recipe.RecipeIngredients.Select(ri => ri.IngredientId),
+                    ri => ri.IngredientId
+                    );
+        IEnumerable<RecipeTag> delRts = entity.RecipeTags
+            .ExceptBy<RecipeTag, long?>(
+                    recipe.RecipeTags.Select(rt => rt.TagId),
+                    rt => rt.TagId
+                    );
+
+        var recipeSql = """
+            UPDATE Recipes AS Recipe
+            SET
+                Name = @Name,
+                CookTime = @CookTime,
+                Price = @Price,
+                ServingQuantity = @ServingQuantity,
+                Instructions = @Instructions
+            WHERE Recipe.Id = @Id;
+            """;
+
+        var riSql = """
+            INSERT OR REPLACE INTO RecipeIngredient
+            (RecipeId, IngredientId, Mass, Volume, Quantity)
+            VALUES
+            (@RecipeId, @IngredientId, @Mass, @Volume, @Quantity);
+            """;
+
+        var riDelSql = """
+            DELETE FROM RecipeIngredient AS RI WHERE RI.RecipeId = @RecipeId AND RI.IngredientId = @IngredientId;
+            """;
+
+        var rtSql = """
+            INSERT OR REPLACE INTO RecipeTag
+            (RecipeId, TagId)
+            VALUES
+            (@RecipeId, @TagId);
+            """;
+
+        var rtDelSql = """
+            DELETE FROM RecipeTag AS RT WHERE RT.RecipeId = @RecipeId AND RT.TagId = @Id;
+            """;
+
+        var conn = _activeConnection;
+
+        await conn.ExecuteAsync(recipeSql, recipe, _transaction);
+
+        var riUpdateTask = conn.ExecuteAsync(riSql, recipe.RecipeIngredients, _transaction);
+        var riDeleteTask = conn.ExecuteAsync(riDelSql, delRis, _transaction);
+        var rtUpdateTask = conn.ExecuteAsync(rtSql, recipe.RecipeTags, _transaction);
+        var rtDeleteTask = conn.ExecuteAsync(rtDelSql, delRts, _transaction);
+
+        await Task.WhenAll(riUpdateTask, riDeleteTask, rtUpdateTask, rtDeleteTask);
+
+        return await GetRecipeByIdAsync(id) ?? throw new Exception("Not throwable2");
     }
 
     public Task<IEnumerable<Ingredient>> SearchIngredientsAsync(GetIngredientListingsQuery query)
@@ -230,7 +331,7 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        return conn.QueryAsync<Ingredient>(sql, query);
+        return conn.QueryAsync<Ingredient>(sql, query, _transaction);
     }
 
     public Task<Ingredient?> GetIngredientByIdAsync(long id)
@@ -245,7 +346,7 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        return conn.QuerySingleOrDefaultAsync<Ingredient>(sql, new { Id = id });
+        return conn.QuerySingleOrDefaultAsync<Ingredient>(sql, new { Id = id }, _transaction);
     }
 
     public async Task<Ingredient> InsertIngredientAsync(Ingredient ingredient)
@@ -263,31 +364,33 @@ public class SqliteRecipeRepository :
         return entity;
     }
 
-    public Task DeleteIngredientAsync(long id)
+    public async Task DeleteIngredientAsync(long id)
     {
         var sql = """
             DELETE FROM RecipeIngredient AS RT WHERE RT.IngredientId = @Id;
             DELETE FROM Ingredients AS Ingredient WHERE Ingredient.Id = @Id;
             """;
 
-        return _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
+        var rowsAffected = await _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
+
+        if (rowsAffected == 0)
+        {
+            throw new KeyNotFoundException($"Ingredient Id \"{id}\" not found, deletion impossible");
+        }
     }
 
-    public Ingredient UpdateIngredient(Ingredient ingredient)
+    public Task<Ingredient> UpdateIngredientAsync(Ingredient ingredient)
     {
+        Validator.ValidateObject(ingredient, new ValidationContext(ingredient));
+
         var sql = """
             UPDATE Ingredients AS Ingredient
             SET Name = @Name
-            WHERE Ingredient.Id = @Id
-            RETURNING *;
+            WHERE Ingredient.Id = @Id;
+            SELECT * FROM Ingredients AS Ingredient WHERE Ingredient.Id = @Id;
             """;
 
-        using (var conn = _connection)
-        {
-            var entity = conn.ExecuteScalar<Ingredient>(sql, ingredient);
-
-            return entity!;
-        }
+        return _activeConnection.QuerySingleAsync<Ingredient>(sql, ingredient, _transaction);
     }
 
     public Task<IEnumerable<Tag>> SearchTagsAsync(GetTagListingsQuery query)
@@ -309,7 +412,7 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        return conn.QueryAsync<Tag>(sql, query);
+        return conn.QueryAsync<Tag>(sql, query, _transaction);
     }
 
     public Task<Tag?> GetTagByIdAsync(long id)
@@ -325,7 +428,7 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        return conn.QuerySingleOrDefaultAsync<Tag>(sql, new { Id = id });
+        return conn.QuerySingleOrDefaultAsync<Tag>(sql, new { Id = id }, _transaction);
     }
 
     public async Task<Tag> InsertTagAsync(Tag tag)
@@ -338,37 +441,34 @@ public class SqliteRecipeRepository :
             SELECT * FROM Tags AS Tag WHERE Tag.Id = LAST_INSERT_ROWID();
             """;
 
-        return await _activeConnection.QuerySingleAsync<Tag>(sql, tag);
+        return await _activeConnection.QuerySingleAsync<Tag>(sql, tag, _transaction);
     }
 
-    public Task DeleteTagAsync(long id)
+    public async Task DeleteTagAsync(long id)
     {
         var sql = """
             DELETE FROM RecipeTag AS RT WHERE RT.TagID = @Id;
             DELETE FROM Tags AS Tag WHERE Tag.ID = @Id;
             """;
 
-        using (var conn = _connection)
+        var rowsAffected = await _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
+
+        if (rowsAffected == 0)
         {
-            return conn.ExecuteAsync(sql, new { Id = id }, _transaction);
+            throw new KeyNotFoundException($"Tag Id \"{id}\" not found, deletion impossible");
         }
     }
 
-    public Tag UpdateTag(Tag tag)
+    public Task<Tag> UpdateTagAsync(Tag tag)
     {
         var sql = """
             UPDATE Tags AS Tag
             SET Name = @Name, Description = @Description
-            WHERE Tag.Id = @Id
-            RETURNING *;
+            WHERE Tag.Id = @Id;
+            SELECT * FROM Tags AS Tag WHERE Tag.Id = @Id;
             """;
 
-        using (var conn = _connection)
-        {
-            var entity = conn.ExecuteScalar<Tag>(sql, tag);
-
-            return entity!;
-        }
+        return _activeConnection.QuerySingleAsync<Tag>(sql, tag, _transaction);
     }
 
     public void BeginTransaction()

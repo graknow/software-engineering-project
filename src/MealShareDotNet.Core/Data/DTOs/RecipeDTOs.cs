@@ -23,7 +23,8 @@ public class RecipeListingDTO
             CookTime = recipe.CookTime,
             ServingQuantity = recipe.ServingQuantity,
             UpdatedDate = recipe.UpdatedDate,
-            Tags = recipe.Tags.Select(TagDTO.FromEntity).ToList(),
+            Tags = recipe.RecipeTags
+                .Select(rt => TagDTO.FromEntity(rt.Tag!)).ToList()
         };
     }
 }
@@ -54,8 +55,10 @@ public class RecipeDTO
             ServingQuantity = recipe.ServingQuantity,
             Instructions = recipe.Instructions,
             UpdatedDate = recipe.UpdatedDate,
-            Ingredients = recipe.Ingredients.Select(IngredientDTO.FromEntity).ToList(),
-            Tags = recipe.Tags.Select(TagDTO.FromEntity).ToList()
+            Ingredients = recipe.RecipeIngredients
+                .Select(ri => IngredientDTO.FromEntity(ri.Ingredient!)).ToList(),
+            Tags = recipe.RecipeTags
+                .Select(rt => TagDTO.FromEntity(rt.Tag!)).ToList()
         };
     }
 }

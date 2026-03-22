@@ -9,6 +9,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 public class Tag
 {
     [Key]
+    [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long? Id { get; set; }
 
@@ -17,4 +18,8 @@ public class Tag
     public string Name { get; set; } = String.Empty;
 
     public string? Description { get; set; }
+
+
+    [NotMapped]
+    public ICollection<RecipeTag> RecipeTags { get; set; } = [];
 }
