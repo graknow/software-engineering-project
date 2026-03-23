@@ -11,7 +11,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MealShareDotNet.Client.Tests/MealShareDotNet.Client.Tests.csproj" />
-    <Project Path="tests/MealShareDotNet.Core.Tests/MealShareDotNet.Core.Tests.csproj" />
+    <Project Path="tests/MealShareDotNet.Core.Tests.Unit/MealShareDotNet.Core.Tests.Unit.csproj" />
+    <Project Path="tests/MealShareDotNet.Core.Tests.Integration/MealShareDotNet.Core.Tests.Integration.csproj" />
     <Project Path="tests/MealShareDotNet.Server.Tests/MealShareDotNet.Server.Tests.csproj" />
   </Folder>
 </Solution>

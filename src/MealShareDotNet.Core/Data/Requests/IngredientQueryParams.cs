@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace MealShareDotNet.Core.Data.Requests;
 
 [ExcludeFromCodeCoverage]
-public class RecipeListParams
+public class IngredientQueryParams
 {
-    public string SearchQuery { get; set; } = String.Empty;
+    public string? NameQuery { get; init; }
 }

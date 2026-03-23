@@ -1,0 +1,35 @@
+{
+  "Name": "TestRecipeUpdate",
+  "CookTime": 1000,
+  "Price": null,
+  "ServingQuantity": 4000,
+  "Instructions": "A bunch of updated testing steps",
+  "Ingredients": [
+    {
+      "Id": 2,
+      "Name": "Irrelavant",
+      "Mass": 5000,
+      "Volume": null,
+      "Quantity": null
+    },
+    {
+      "Id": null,
+      "Name": "VeryUniqueUpdatedIngredient2",
+      "Mass": null,
+      "Volume": 40000,
+      "Quantity": null
+    }
+  ],
+  "Tags": [
+    {
+      "Id": 0,
+      "Name": "irrelevant",
+      "Description": null
+    },
+    {
+      "Id": null,
+      "Name": "VeryUniqueUpdatedTestTag2",
+      "Description": "Very updatedly testable"
+    }
+  ]
+}

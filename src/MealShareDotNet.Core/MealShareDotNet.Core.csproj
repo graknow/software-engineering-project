@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SQLite" />
     <PackageReference Include="Dapper" />
+    <PackageReference Include="Dapper.SqlBuilder" />
 
     <!-- Embedded migration data -->
     <EmbeddedResource Include="Migrations/*.sql" />

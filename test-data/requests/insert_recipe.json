@@ -1,0 +1,35 @@
+{
+  "Name": "TestRecipeInsertion",
+  "CookTime": 27,
+  "Price": 5,
+  "ServingQuantity": null,
+  "Instructions": "A bunch of testing steps",
+  "Ingredients": [
+    {
+      "Id": 1,
+      "Name": "Irrelavant",
+      "Mass": 5000,
+      "Volume": null,
+      "Quantity": null
+    },
+    {
+      "Id": null,
+      "Name": "VeryUniqueIngredient",
+      "Mass": null,
+      "Volume": null,
+      "Quantity": 1.5
+    }
+  ],
+  "Tags": [
+    {
+      "Id": 1,
+      "Name": "irrelevant",
+      "Description": null
+    },
+    {
+      "Id": null,
+      "Name": "VeryUniqueTestTag",
+      "Description": "Very testable"
+    }
+  ]
+}
