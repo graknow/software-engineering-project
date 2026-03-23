@@ -8,7 +8,7 @@ public interface IRecipeService
     Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(GetRecipeListingsQuery query);
     Task<RecipeDTO?> GetRecipeAsync(long id);
     Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe);
-    Task<bool> DeleteRecipeAsync(long id);
+    Task DeleteRecipeAsync(long id);
     Task<RecipeDTO> UpdateRecipeAsync(RecipeDTO recipe);
     // TODO: Patch?
 }

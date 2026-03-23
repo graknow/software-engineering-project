@@ -126,40 +126,43 @@ public class RepositoryRecipeService : IRecipeService
         }
     }
 
-    public async Task<bool> DeleteRecipeAsync(long id)
+    public async Task DeleteRecipeAsync(long id)
     {
-        if (!await _db.RecipeExistsAsync(id))
-        {
-            throw new KeyNotFoundException("ID doesn't exist in the database.");
-        }
+        var transactable = _db as ITransactableRepository;
 
         try
         {
+            transactable?.BeginTransaction();
+
             // TODO: prevent deletion if included in a meal plan?
             await _db.DeleteRecipeAsync(id);
 
-            if (_db is ITransactableRepository tdb)
-            {
-                tdb.Commit();
-            }
-
-            return true;
+            transactable?.Commit();
         }
-        catch (SqliteException ex)
+        catch
         {
-            Console.WriteLine($"SQLException: {ex.Message}");
-
-            if (_db is ITransactableRepository tdb)
-            {
-                tdb.Rollback();
-            }
-
-            return false;
+            transactable?.Rollback();
+            throw;
         }
     }
 
     public async Task<RecipeDTO> UpdateRecipeAsync(RecipeDTO recipe)
     {
+        var transactable = _db as ITransactableRepository;
+
+        try
+        {
+            transactable?.BeginTransaction();
+            //TODO: Who am i
+            //var result = await _db.UpdateRecipeAsync(recipe);
+
+            transactable?.Commit();
+        }
+        catch
+        {
+            transactable?.Rollback();
+            throw;
+        }
         return recipe;
     }
 }

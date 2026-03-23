@@ -260,9 +260,13 @@ public class SqliteRecipeRepository :
         Validator.ValidateObject(recipe, new ValidationContext(recipe));
         // TODO: validate tags and ingredients if anyone cares
 
-        var id = recipe.Id ?? throw new Exception("Not throwable");
+        if (recipe.Id is null)
+        {
+            throw new ArgumentNullException();
+        }
 
-        var entity = await GetRecipeByIdAsync(id);
+        // it is impossible for this to be null here but the compiler is still angry
+        var entity = await GetRecipeByIdAsync(recipe.Id ?? -1);
 
         if (entity is null)
         {

@@ -84,17 +84,17 @@ public class RecipeControllerV1 : ControllerBase
     {
         try
         {
-            var success = await _recipes.DeleteRecipeAsync(id);
-            if (!success)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            await _recipes.DeleteRecipeAsync(id);
 
             return NoContent();
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
+        }
+        catch
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
@@ -104,6 +104,26 @@ public class RecipeControllerV1 : ControllerBase
             [FromBody] RecipeDTO recipe
             )
     {
-        return Ok();
+        recipe.Id = id;
+
+        try
+        {
+            var result = await _recipes.UpdateRecipeAsync(recipe);
+
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (ArgumentNullException)
+        {
+            return NotFound();
+        }
+        catch
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
     }
 }
