@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import argparse
+import re
 
 parser = argparse.ArgumentParser(
                     prog='Scraper Handler',
@@ -22,8 +23,11 @@ def determineFunctionality():
         with open(scraper, "r") as file:
             firstline = file.readline().strip()
             if("Usage:" in firstline):
-                print(firstline.split("Usage: ")[1])
-                firstLines = firstLines + firstline + "\n"
+                firstline = firstline.split(" ")
+                for item in firstline:
+                    name = re.findall(".Scraper.py", item)
+                    if len(name) != 0:
+                        firstLines = firstLines + item.split("Scraper.py")[0] + "\n"
 
     names.write(firstLines)
 
