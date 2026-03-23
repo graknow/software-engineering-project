@@ -14,9 +14,16 @@ public class IngredientDTO
     public int? Volume { get; set; }
     public float? Quantity { get; set; }
 
-    public static IngredientDTO FromEntity(Ingredient ingredient)
+    public static IngredientDTO FromEntity(RecipeIngredient ri)
     {
-        return new();
+        return new()
+        {
+            Id = ri.Ingredient?.Id,
+            Name = ri.Ingredient?.Name ?? String.Empty,
+            Mass = ri.Mass,
+            Volume = ri.Volume,
+            Quantity = ri.Quantity
+        };
     }
 }
 

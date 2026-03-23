@@ -118,11 +118,12 @@ public class RecipeControllerV1 : ControllerBase
         }
         catch (ArgumentNullException)
         {
-            return NotFound();
+            return BadRequest();
         }
-        catch
+        // TODO: Remove or only enable message in dev environment
+        catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
 
     }

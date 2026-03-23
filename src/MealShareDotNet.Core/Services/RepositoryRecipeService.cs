@@ -36,14 +36,6 @@ public class RepositoryRecipeService : IRecipeService
 
     public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
     {
-        var entity = new Recipe()
-        {
-            Name = recipe.Name,
-            CookTime = recipe.CookTime,
-            Price = recipe.Price,
-            ServingQuantity = recipe.ServingQuantity,
-            Instructions = recipe.Instructions,
-        };
 
         var transactable = _db as ITransactableRepository;
 
@@ -53,65 +45,12 @@ public class RepositoryRecipeService : IRecipeService
 
             // TODO: Proper async slop
             // TODO: Check ingredient/tag name similarities and raise exception if similar (Handled in client)
-            foreach (var ingredient in recipe.Ingredients.Where(i => i.Id is null))
-            {
-                var ingredientEntity = new Ingredient()
-                {
-                    Name = ingredient.Name,
-                };
+            var addIngredientTask = AddMissingIngredients(recipe);
+            var addTagTask = AddMissingTags(recipe);
 
-                ingredientEntity = await _db.InsertIngredientAsync(ingredientEntity);
+            await Task.WhenAll(addIngredientTask, addTagTask);
 
-                ingredient.Id = ingredientEntity.Id;
-            }
-
-            foreach (var tag in recipe.Tags.Where(t => t.Id is null))
-            {
-                var tagEntity = new Tag()
-                {
-                    Name = tag.Name,
-                    Description = tag.Description
-                };
-
-                tagEntity = await _db.InsertTagAsync(tagEntity);
-
-                tag.Id = tagEntity.Id;
-            }
-
-            // TODO: perhaps move this logic to recipe repository?
-            foreach (var ingredient in recipe.Ingredients)
-            {
-                var ri = new RecipeIngredient()
-                {
-                    IngredientId = ingredient.Id,
-                    Ingredient = new Ingredient()
-                    {
-                        Id = ingredient.Id,
-                        Name = ingredient.Name
-                    },
-                    Mass = ingredient.Mass,
-                    Volume = ingredient.Volume,
-                    Quantity = ingredient.Quantity
-                };
-
-                entity.RecipeIngredients.Add(ri);
-            }
-
-            foreach (var tag in recipe.Tags)
-            {
-                var rt = new RecipeTag()
-                {
-                    TagId = tag.Id,
-                    Tag = new Tag()
-                    {
-                        Id = tag.Id,
-                        Name = tag.Name,
-                        Description = tag.Description
-                    }
-                };
-
-                entity.RecipeTags.Add(rt);
-            }
+            var entity = DTOToEntity(recipe);
 
             var result = await _db.InsertRecipeAsync(entity);
 
@@ -153,16 +92,108 @@ public class RepositoryRecipeService : IRecipeService
         try
         {
             transactable?.BeginTransaction();
-            //TODO: Who am i
-            //var result = await _db.UpdateRecipeAsync(recipe);
+            var addIngredientTask = AddMissingIngredients(recipe);
+            var addTagTask = AddMissingTags(recipe);
+
+            await Task.WhenAll(addIngredientTask, addTagTask);
+
+            var entity = DTOToEntity(recipe);
+
+            entity = await _db.UpdateRecipeAsync(entity);
 
             transactable?.Commit();
+
+            return RecipeDTO.FromEntity(entity);
         }
         catch
         {
             transactable?.Rollback();
             throw;
         }
-        return recipe;
+    }
+
+    private async Task AddMissingIngredients(RecipeDTO recipe)
+    {
+        foreach (var ingredient in recipe.Ingredients.Where(i => i.Id is null))
+        {
+            var ingredientEntity = new Ingredient()
+            {
+                Name = ingredient.Name,
+            };
+
+            ingredientEntity = await _db.InsertIngredientAsync(ingredientEntity);
+
+            ingredient.Id = ingredientEntity.Id;
+        }
+    }
+
+    private async Task AddMissingTags(RecipeDTO recipe)
+    {
+        foreach (var tag in recipe.Tags.Where(t => t.Id is null))
+        {
+            var tagEntity = new Tag()
+            {
+                Name = tag.Name,
+                Description = tag.Description
+            };
+
+            tagEntity = await _db.InsertTagAsync(tagEntity);
+
+            tag.Id = tagEntity.Id;
+        }
+    }
+
+    private Recipe DTOToEntity(RecipeDTO recipe)
+    {
+        var entity = new Recipe()
+        {
+            Id = recipe.Id,
+            Name = recipe.Name,
+            CookTime = recipe.CookTime,
+            Price = recipe.Price,
+            ServingQuantity = recipe.ServingQuantity,
+            Instructions = recipe.Instructions,
+        };
+
+        // TODO: perhaps move this logic to recipe repository?
+        foreach (var ingredient in recipe.Ingredients)
+        {
+            var ri = new RecipeIngredient()
+            {
+                RecipeId = entity.Id,
+                Recipe = entity,
+                IngredientId = ingredient.Id,
+                Ingredient = new Ingredient()
+                {
+                    Id = ingredient.Id,
+                    Name = ingredient.Name
+                },
+                Mass = ingredient.Mass,
+                Volume = ingredient.Volume,
+                Quantity = ingredient.Quantity
+            };
+
+            entity.RecipeIngredients.Add(ri);
+        }
+
+        foreach (var tag in recipe.Tags)
+        {
+            var rt = new RecipeTag()
+            {
+                RecipeId = entity.Id,
+                Recipe = entity,
+                TagId = tag.Id,
+                Tag = new Tag()
+                {
+                    Id = tag.Id,
+                    Name = tag.Name,
+                    Description = tag.Description
+                }
+            };
+
+            entity.RecipeTags.Add(rt);
+        }
+
+        return entity;
     }
 }

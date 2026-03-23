@@ -56,7 +56,7 @@ public class RecipeDTO
             Instructions = recipe.Instructions,
             UpdatedDate = recipe.UpdatedDate,
             Ingredients = recipe.RecipeIngredients
-                .Select(ri => IngredientDTO.FromEntity(ri.Ingredient!)).ToList(),
+                .Select(ri => IngredientDTO.FromEntity(ri)).ToList(),
             Tags = recipe.RecipeTags
                 .Select(rt => TagDTO.FromEntity(rt.Tag!)).ToList()
         };

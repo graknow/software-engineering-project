@@ -315,21 +315,21 @@ public class SqliteRecipeRepository :
             """;
 
         var rtDelSql = """
-            DELETE FROM RecipeTag AS RT WHERE RT.RecipeId = @RecipeId AND RT.TagId = @Id;
+            DELETE FROM RecipeTag AS RT WHERE RT.RecipeId = @RecipeId AND RT.TagId = @TagId;
             """;
 
         var conn = _activeConnection;
 
         await conn.ExecuteAsync(recipeSql, recipe, _transaction);
 
-        var riUpdateTask = conn.ExecuteAsync(riSql, recipe.RecipeIngredients, _transaction);
         var riDeleteTask = conn.ExecuteAsync(riDelSql, delRis, _transaction);
-        var rtUpdateTask = conn.ExecuteAsync(rtSql, recipe.RecipeTags, _transaction);
+        var riUpdateTask = conn.ExecuteAsync(riSql, recipe.RecipeIngredients, _transaction);
         var rtDeleteTask = conn.ExecuteAsync(rtDelSql, delRts, _transaction);
+        var rtUpdateTask = conn.ExecuteAsync(rtSql, recipe.RecipeTags, _transaction);
 
         await Task.WhenAll(riUpdateTask, riDeleteTask, rtUpdateTask, rtDeleteTask);
 
-        return await GetRecipeByIdAsync(id) ?? throw new Exception("Not throwable2");
+        return await GetRecipeByIdAsync(recipe.Id ?? 0) ?? throw new Exception("Not throwable2");
     }
 
     public Task<IEnumerable<Ingredient>> SearchIngredientsAsync(GetIngredientListingsQuery query)
