@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import glob
 import os
@@ -51,7 +52,7 @@ def scrape(scraperName, arguments):
             for arguement in arguments:
                 systemArguements = arguement + " "
 
-    scraperName = scraperName + "Scraper.py"
+    scraperName = os.path.join(os.path.dirname(__file__), scraperName + "Scraper.py")
     subprocess.run(["python", scraperName, systemArguements.strip()])
 
 scrape(args.name, args.arguments)
