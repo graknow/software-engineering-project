@@ -5,6 +5,15 @@ import sys
 import subprocess
 import argparse
 
+parser = argparse.ArgumentParser(
+                    prog='Scraper Handler',
+                    description='Allows for a simple call of scraper name and arguments i.e.: handler.py ingredient chicken_breast',
+                    epilog='Stop reading this, it is a waste of your time')
+
+parser.add_argument("name", help="Name of the scraper to run")
+parser.add_argument("-a", "--arguments", help="additional arguments, such as the ingredient being searched for")
+args = parser.parse_args()
+
 def determineFunctionality():
     scrapers = glob.glob("./*Scraper.py")
     names = open("./scrapers.txt", "w")
@@ -24,21 +33,24 @@ def scrape(scraperName, arguments):
     if not os.path.exists("./scrapers.txt"):
         determineFunctionality()
 
-    systemArguements = ""
-    for arguement in arguments:
-        systemArguements = arguement + " "
+    if scraperName != "random" and arguments == None:
+        print("Missing arguments for scraper")
+        return
+
+    if isinstance(arguments, str):
+        systemArguements = arguments
+    else:
+        if scraperName == "random":
+            systemArguements = ""
+        else:
+            systemArguements = ""
+            for arguement in arguments:
+                systemArguements = arguement + " "
 
     scraperName = scraperName + "Scraper.py"
     subprocess.run(["python", scraperName, systemArguements.strip()])
 
-arguments = []
-for arg in sys.argv:
-    arguments.append(arg)
-scrape(sys.argv[1], arguments)
+scrape(args.name, args.arguments)
 
 
 
-parser = argparse.ArgumentParser(
-                    prog='Scraper Handler',
-                    description='',
-                    epilog='Text at the bottom of help')
