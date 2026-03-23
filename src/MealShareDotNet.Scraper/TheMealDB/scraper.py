@@ -4,7 +4,8 @@ import re
 import yaml
 import sys
 
-class recipe:
+class recipe(yaml.YAMLObject):
+    yaml_tag = u'!Recipe'
     def __init__(self, name="", instructions="", ingredients=[], quantities=[]):
         self.name = name
         self.instructions = instructions
@@ -21,22 +22,26 @@ class ingredient(yaml.YAMLObject):
     yaml_tag = u'!Ingredient'
     scale = {
         "teaspoon": 50,
+        "tsp": 50,
         "tablespoon": 148,
+        "tbs": 148,
         "cup": 2366,
         "gallon": 37854,
         "pint": 4732,
         "pound": 45359,
+        "lb": 45359,
         "liter": 1000,
         "milliliter": 10,
         "ml": 10,
         "ounce": 2835,
         "gram": 10,
+        "g": 10,
         "kilogram": 10000,
         "kg": 10000
     }
 
-    solid = ("pound", "ouce", "gram", "kilogram", "kg")
-    fluid = ("teaspoon", "tablespoon", "cup", "gallon", "pint", "liter", "milliliter", "ml")
+    solid = ("pound", "lb", "ouce", "gram", "g", "kilogram", "kg")
+    fluid = ("teaspoon", "tsp", "tablespoon", "tbs", "cup", "gallon", "pint", "liter", "milliliter", "ml")
 
     def __init__(self, name="", quantity=None, mass=None, volume=None, parentID=None, quantityName=None):
         self.name = name
@@ -55,56 +60,81 @@ class ingredient(yaml.YAMLObject):
             self.quantity = None
 
         else:
-            self.quantity = quantity
+            self.quantity = self.normalize(self.quantity, self.quantityName)
 
     def __repr__(self):
         return "%s %s %s %s %s" % (self.name, self.quantity, self.mass, self.volume, self.quantityName)
 
     def normalize(self, quantity=0, quantityName=""):
         for val in self.scale.keys():
-            if(quantityName.find(val) != -1):
+            if(quantityName.find(val) != -1 and val != "g"):
+                return float(quantity) * self.scale[val]
+            test = re.search("[0-9][0-9]g", quantityName)
+            if(test):
                 return float(quantity) * self.scale[val]
         return quantity
 
-sites = sys.argv[1]
+def parseJson(recipe_json):
+    Recipe = recipe()
+    ingredients = []
+    quantities = []
 
-response = requests.get(sites)
-
-recipe_json = json.loads(response.text)
-
-recipe = recipe()
-ingredients = []
-quantities = []
-
-for i in range(1, 20):
-    Ingredient = recipe_json["meals"][0]["strIngredient" + str(i)]
-    quantity = recipe_json["meals"][0]["strMeasure" + str(i)]
-    if Ingredient != '' and Ingredient is not None:
-        quantity_num = re.findall(r'\d+', quantity)
-        if len(quantity_num) != 0:
-            quantity = quantity.split(quantity_num[-1])
-            quantity = quantity[-1]
-        if len(quantity_num) == 2:
-            quantity_num = int(quantity_num[0]) / int(quantity_num[1])
-        else:
-            quantity_num = '1'
-        val = ingredient(Ingredient, quantity_num, None, None, None, quantity)
-        ingredients.append(val)
-        quantities.append(quantity)
+    for i in range(1, 20):
+        Ingredient = recipe_json["strIngredient" + str(i)]
+        quantity = recipe_json["strMeasure" + str(i)]
+        if Ingredient != '' and Ingredient is not None:
+            quantity_num = re.findall(r'\d+', quantity)
+            if len(quantity_num) != 0:
+                quantity = quantity.split(quantity_num[-1])
+                quantity = quantity[-1]
+            if len(quantity_num) == 2:
+                quantity_num = int(quantity_num[0]) / int(quantity_num[1])
+            else:
+                quantity_num = '1'
+            val = ingredient(Ingredient, quantity_num, None, None, None, quantity)
+            ingredients.append(val)
+            quantities.append(quantity)
 
 
-recipe.ingredients = ingredients
-recipe.quantities = quantities
+    Recipe.ingredients = ingredients
+    Recipe.quantities = quantities
 
-recipe.name = recipe_json["meals"][0]["strMeal"]
+    Recipe.name = recipe_json["strMeal"]
 
-recipe.instructions = recipe_json["meals"][0]["strInstructions"].replace("\n", "")
+    Recipe.instructions = recipe_json["strInstructions"].replace("\n", "")
 
-for i in range(1,20):
-    quantity = recipe_json["meals"][0]["strMeasure" + str(i)]
-    if quantity != '' and quantity is not None:
-        quantities.append(quantity)
+    for i in range(1,20):
+        quantity = recipe_json["strMeasure" + str(i)]
+        if quantity != '' and quantity is not None:
+            quantities.append(quantity)
 
-recipe.quantities = quantities
+    Recipe.quantities = quantities
+    return Recipe
 
-print(yaml.dump(recipe.makeYaml(), width = 1000))
+def scrape(site):
+    response = requests.get(site)
+
+    recipe_json = json.loads(response.text)
+    recipe = parseJson(recipe_json["meals"][0])
+
+    print(yaml.dump(recipe.makeYaml(), width = 1000))
+
+def multiScrape(site):
+    response = requests.get(site)
+
+    recipe_json = json.loads(response.text)
+    recipes = []
+
+    for item in recipe_json["meals"]:
+        if len(item["strMeal"]) != 0:
+            site = "https://www.themealdb.com/api/json/v1/1/search.php?s=" + item["strMeal"]
+            response = requests.get(site)
+            recipe_json = json.loads(response.text)
+            recipes.append(parseJson(recipe_json["meals"][0]))
+            # print(parseJson(recipe_json["meals"][0]))
+    yamls = {}
+    for recipe in recipes:
+        yamls[recipe.name] = recipe.makeYaml()
+    return yaml.dump(yamls, width = 1000)
+    # print(yaml.dump(recipes.makeYaml(), width = 1000))
+
