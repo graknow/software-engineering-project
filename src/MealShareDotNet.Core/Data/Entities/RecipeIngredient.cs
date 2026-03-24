@@ -6,7 +6,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 
 [ExcludeFromCodeCoverage]
 [Table("RecipeIngredient")]
-public class RecipeIngredient
+public class RecipeIngredient : ICloneable
 {
     [ForeignKey("Recipe")]
     [Required]
@@ -28,4 +28,12 @@ public class RecipeIngredient
     public float? Quantity { get; set; }
 
     public string? QuantityName { get; set; }
+
+    public object Clone()
+    {
+        return new RecipeIngredient()
+        {
+
+        };
+    }
 }
