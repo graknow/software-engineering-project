@@ -43,12 +43,10 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        var offset = pager.PageSize * (pager.PageNumber - 1);
-
         var query = new GetRecipeListingsQuery()
         {
             PageSize = pager.PageSize,
-            PageOffset = offset
+            PageOffset = pager.PageOffset
         };
 
         return Ok(await _recipes.GetRecipeListingsAsync(query));
@@ -99,7 +97,7 @@ public class RecipeControllerV1 : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateRecipe(
+    public async Task<ActionResult<RecipeDTO>> UpdateRecipe(
             long id,
             [FromBody] RecipeDTO recipe
             )
@@ -121,10 +119,9 @@ public class RecipeControllerV1 : ControllerBase
             return BadRequest();
         }
         // TODO: Remove or only enable message in dev environment
-        catch (Exception ex)
+        catch
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
-
     }
 }

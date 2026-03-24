@@ -25,6 +25,15 @@ public class IngredientDTO
             Quantity = ri.Quantity
         };
     }
+
+    public static IngredientDTO FromEntity(Ingredient i)
+    {
+        return new()
+        {
+            Id = i.Id,
+            Name = i.Name
+        };
+    }
 }
 
 [ExcludeFromCodeCoverage]
@@ -33,4 +42,13 @@ public class IngredientListingDTO
     public long? Id { get; set; }
 
     public string Name { get; set; } = String.Empty;
+
+    public static IngredientListingDTO FromEntity(Ingredient i)
+    {
+        return new()
+        {
+            Id = i.Id,
+            Name = i.Name
+        };
+    }
 }
