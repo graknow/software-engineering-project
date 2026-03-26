@@ -41,7 +41,7 @@ public class Recipe : ICloneable
 
     public object Clone()
     {
-        return new Recipe()
+        var clone = new Recipe()
         {
             Id = Id,
             Name = Name,
@@ -52,5 +52,36 @@ public class Recipe : ICloneable
             CreationDate = CreationDate,
             UpdatedDate = UpdatedDate,
         };
+
+        foreach (var ri in RecipeIngredients)
+        {
+            var ingredient = (Ingredient?)ri.Ingredient?.Clone();
+
+            clone.RecipeIngredients.Add(new()
+            {
+                Ingredient = ingredient,
+                IngredientId = ingredient?.Id,
+                Recipe = clone,
+                RecipeId = clone.Id,
+                Mass = ri.Mass,
+                Volume = ri.Volume,
+                Quantity = ri.Quantity
+            });
+        }
+
+        foreach (var rt in RecipeTags)
+        {
+            var tag = (Tag?)rt.Tag?.Clone();
+
+            clone.RecipeTags.Add(new()
+            {
+                Tag = tag,
+                TagId = tag?.Id,
+                Recipe = clone,
+                RecipeId = clone.Id
+            });
+        }
+
+        return clone;
     }
 }

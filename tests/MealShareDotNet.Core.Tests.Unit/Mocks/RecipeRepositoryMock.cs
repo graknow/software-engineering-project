@@ -7,102 +7,107 @@ namespace MealShareDotNet.Core.Tests.Unit.Mocks;
 // TODO: Implement interface
 public class RecipeRepositoryMock : IRecipeRepository
 {
-    private readonly List<Recipe> _recipes = [];
-    private readonly List<Ingredient> _ingredients = [];
-    private readonly List<RecipeIngredient> _ris = [];
-    private readonly List<Tag> _tags = [];
-    private readonly List<RecipeTag> _rts = [];
+    public readonly List<Recipe> Recipes = [];
+    public readonly List<Ingredient> Ingredients = [];
+    public readonly List<RecipeIngredient> Ris = [];
+    public readonly List<Tag> Tags = [];
+    public readonly List<RecipeTag> Rts = [];
 
     public async Task DeleteIngredientAsync(long id)
     {
-        var ingredient = _ingredients.SingleOrDefault(i => i.Id == id);
+        var ingredient = Ingredients.SingleOrDefault(i => i.Id == id);
 
         if (ingredient is null)
         {
             throw new KeyNotFoundException();
         }
 
-        _ingredients.Remove(ingredient);
-        _ris.RemoveAll(ri => ri.IngredientId == id);
+        Ingredients.Remove(ingredient);
+        Ris.RemoveAll(ri => ri.IngredientId == id);
     }
 
     public async Task DeleteRecipeAsync(long id)
     {
-        var recipe = _recipes.SingleOrDefault(r => r.Id == id);
+        var recipe = Recipes.SingleOrDefault(r => r.Id == id);
 
         if (recipe is null)
         {
             throw new KeyNotFoundException();
         }
 
-        _recipes.Remove(recipe);
-        _ris.RemoveAll(ri => ri.RecipeId == id);
-        _rts.RemoveAll(rt => rt.RecipeId == id);
+        Recipes.Remove(recipe);
+        Ris.RemoveAll(ri => ri.RecipeId == id);
+        Rts.RemoveAll(rt => rt.RecipeId == id);
     }
 
     public async Task DeleteTagAsync(long id)
     {
-        var tag = _tags.SingleOrDefault(t => t.Id == id);
+        var tag = Tags.SingleOrDefault(t => t.Id == id);
 
         if (tag is null)
         {
             throw new KeyNotFoundException();
         }
 
-        _rts.RemoveAll(rt => rt.TagId == id);
+        Rts.RemoveAll(rt => rt.TagId == id);
     }
 
     public async Task<Ingredient?> GetIngredientByIdAsync(long id)
     {
-        return _ingredients.SingleOrDefault(i => i.Id == id);
+        return (Ingredient?)Ingredients.SingleOrDefault(i => i.Id == id)?.Clone();
     }
 
     public async Task<Recipe?> GetRecipeByIdAsync(long id)
     {
-        return _recipes.SingleOrDefault(r => r.Id == id);
+        return (Recipe?)Recipes.SingleOrDefault(r => r.Id == id)?.Clone();
     }
 
     public async Task<Tag?> GetTagByIdAsync(long id)
     {
-        return _tags.SingleOrDefault(t => t.Id == id);
+        return (Tag?)Tags.SingleOrDefault(t => t.Id == id)?.Clone();
     }
 
     public async Task<Ingredient> InsertIngredientAsync(Ingredient ingredient)
     {
-        var nextId = _ingredients.Select(i => i.Id).Max() + 1;
+        var nextId = Ingredients.Select(i => i.Id).Max() + 1;
+        var clone = (Ingredient)ingredient.Clone();
 
-        ingredient.Id = nextId;
-        _ingredients.Add(ingredient);
+        clone.Id = nextId;
+        Ingredients.Add(clone);
 
-        return ingredient;
+        return (Ingredient)clone.Clone();
     }
 
     public async Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
-        var nextId = _recipes.Select(r => r.Id).Max() + 1;
+        var nextId = Recipes.Select(r => r.Id).Max() + 1;
+        var clone = (Recipe)recipe.Clone();
 
-        recipe.Id = nextId;
-        _recipes.Add(recipe);
+        clone.Id = nextId;
+        Recipes.Add(clone);
+
+        return (Recipe)clone.Clone();
     }
 
     public async Task<Tag> InsertTagAsync(Tag tag)
     {
-        var nextId = _tags.Select(t => t.Id).Max() + 1;
+        var nextId = Tags.Select(t => t.Id).Max() + 1;
+        var clone = (Tag)tag.Clone();
 
-        tag.Id = nextId;
-        _tags.Add(tag);
+        clone.Id = nextId;
+        Tags.Add(clone);
 
-        return tag;
+        return (Tag)clone.Clone();
     }
 
     public async Task<bool> RecipeExistsAsync(long id)
     {
-        return _recipes.SingleOrDefault(r => r.Id == id) is not null;
+        return Recipes.SingleOrDefault(r => r.Id == id) is not null;
     }
 
     public async Task<IEnumerable<Ingredient>> SearchIngredientsAsync(GetIngredientListingsQuery query)
     {
-        var ingredients = _ingredients.Where(i => true);
+        var ingredients = Ingredients.Where(i => true);
 
         if (query.PageOffset is not null && query.PageSize is not null)
         {
@@ -121,7 +126,7 @@ public class RecipeRepositoryMock : IRecipeRepository
 
     public async Task<IEnumerable<Tag>> SearchTagsAsync(GetTagListingsQuery query)
     {
-        var tags = _tags.Where(i => true);
+        var tags = Tags.Where(i => true);
 
         if (query.PageOffset is not null && query.PageSize is not null)
         {

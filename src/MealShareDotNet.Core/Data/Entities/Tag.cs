@@ -6,7 +6,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 
 [ExcludeFromCodeCoverage]
 [Table("Tags")]
-public class Tag
+public class Tag : ICloneable
 {
     [Key]
     [Required]
@@ -19,7 +19,13 @@ public class Tag
 
     public string? Description { get; set; }
 
-
-    [NotMapped]
-    public ICollection<RecipeTag> RecipeTags { get; set; } = [];
+    public object Clone()
+    {
+        return new Tag()
+        {
+            Id = Id,
+            Name = (string)Name.Clone(),
+            Description = (string?)Description?.Clone()
+        };
+    }
 }
