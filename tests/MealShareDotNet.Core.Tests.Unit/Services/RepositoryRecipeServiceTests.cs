@@ -14,6 +14,7 @@ namespace MealShareDotNet.Core.Tests.Unit.Services;
 public class RecipeRepositoryServiceTests
 {
     private IRecipeRepository _recipeRepository = default!;
+    private IRecipeService _recipeService = default!;
 
     private static IEnumerable<Recipe> _recipes = [];
     private static IEnumerable<Ingredient> _ingredients = [];
@@ -24,48 +25,29 @@ public class RecipeRepositoryServiceTests
     [OneTimeSetUp]
     public void SetUpAll()
     {
-        var deserializer = new Deserializer();
+        _recipeRepository = new MockRecipeRepository();
+        _recipeService = new RepositoryRecipeService(_recipeRepository);
+    }
 
-        _recipes = deserializer.Deserialize<IEnumerable<Recipe>>(
-                new StreamReader("test-data/tables/Recipes.yaml")
-                );
+    [TestCase(0)]
+    [TestCase(1)]
+    public async Task GetRecipe_ValidId_FullRecipe(long id)
+    {
+        var recipe = await _recipeRepository.GetRecipeByIdAsync(id);
 
-        _ingredients = deserializer.Deserialize<IEnumerable<Ingredient>>(
-                new StreamReader("test-data/tables/Ingredients.yaml")
-                );
+        var entity = await _recipeService.GetRecipeAsync(id);
 
-        _tags = deserializer.Deserialize<IEnumerable<Tag>>(
-                new StreamReader("test-data/tables/Tags.yaml")
-                );
+        Assert.That(entity?.Name, Is.EqualTo(recipe?.Name));
+    }
 
-        _ris = deserializer.Deserialize<IEnumerable<RecipeIngredient>>(
-                new StreamReader("test-data/tables/RecipeIngredient.yaml")
-                );
-
-        _rts = deserializer.Deserialize<IEnumerable<RecipeTag>>(
-                new StreamReader("test-data/tables/RecipeTag.yaml")
-                );
-
-        foreach (var recipe in _recipes)
+    [Test]
+    public async Task InsertRecipe_ValidRecipe_AddedToService()
+    {
+        var entity = new Recipe()
         {
-            recipe.RecipeIngredients = _ris.Where(ri => ri.RecipeId == recipe.Id).ToList();
-            recipe.RecipeTags = _rts.Where(rt => rt.RecipeId == recipe.Id).ToList();
-        }
-
-        foreach (var ri in _ris)
-        {
-            var relatedIngredient = _ingredients.Single(i => i.Id == ri.IngredientId);
-            ri.Ingredient = relatedIngredient;
-            ri.IngredientId = relatedIngredient.Id;
-        }
-
-        foreach (var rt in _rts)
-        {
-            var relatedTag = _tags.Single(t => t.Id == rt.TagId);
-            rt.Tag = relatedTag;
-            rt.TagId = relatedTag.Id;
-        }
-
-        _recipeRepository = new RecipeRepositoryMock();
+            Name = "TestInsertion",
+            Instructions = "TestInstructions",
+        };
+        // TODO: tests are a later problem i guess
     }
 }

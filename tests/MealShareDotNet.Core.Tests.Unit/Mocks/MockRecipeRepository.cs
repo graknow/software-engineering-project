@@ -1,3 +1,4 @@
+using YamlDotNet.Serialization;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Repositories;
@@ -5,13 +6,58 @@ using MealShareDotNet.Core.Repositories;
 namespace MealShareDotNet.Core.Tests.Unit.Mocks;
 
 // TODO: Implement interface
-public class RecipeRepositoryMock : IRecipeRepository
+public class MockRecipeRepository : IRecipeRepository
 {
     public readonly List<Recipe> Recipes = [];
     public readonly List<Ingredient> Ingredients = [];
     public readonly List<RecipeIngredient> Ris = [];
     public readonly List<Tag> Tags = [];
     public readonly List<RecipeTag> Rts = [];
+
+    public MockRecipeRepository()
+    {
+        var deserializer = new Deserializer();
+
+        Recipes = deserializer.Deserialize<IEnumerable<Recipe>>(
+                new StreamReader("test-data/tables/Recipes.yaml")
+                ).ToList();
+
+        Ingredients = deserializer.Deserialize<IEnumerable<Ingredient>>(
+                new StreamReader("test-data/tables/Ingredients.yaml")
+                ).ToList();
+
+        Tags = deserializer.Deserialize<IEnumerable<Tag>>(
+                new StreamReader("test-data/tables/Tags.yaml")
+                ).ToList();
+
+        Ris = deserializer.Deserialize<IEnumerable<RecipeIngredient>>(
+                new StreamReader("test-data/tables/RecipeIngredient.yaml")
+                ).ToList();
+
+        Rts = deserializer.Deserialize<IEnumerable<RecipeTag>>(
+                new StreamReader("test-data/tables/RecipeTag.yaml")
+                ).ToList();
+
+        foreach (var recipe in Recipes)
+        {
+            recipe.RecipeIngredients = Ris.Where(ri => ri.RecipeId == recipe.Id).ToList();
+            recipe.RecipeTags = Rts.Where(rt => rt.RecipeId == recipe.Id).ToList();
+        }
+
+        foreach (var ri in Ris)
+        {
+            var relatedIngredient = Ingredients.Single(i => i.Id == ri.IngredientId);
+            ri.Ingredient = relatedIngredient;
+            ri.IngredientId = relatedIngredient.Id;
+        }
+
+        foreach (var rt in Rts)
+        {
+            var relatedTag = Tags.Single(t => t.Id == rt.TagId);
+            rt.Tag = relatedTag;
+            rt.TagId = relatedTag.Id;
+        }
+    }
 
     public async Task DeleteIngredientAsync(long id)
     {
