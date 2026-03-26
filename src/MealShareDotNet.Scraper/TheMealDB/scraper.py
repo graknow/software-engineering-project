@@ -6,14 +6,13 @@ import sys
 
 class recipe(yaml.YAMLObject):
     yaml_tag = u'!Recipe'
-    def __init__(self, name="", instructions="", ingredients=[], quantities=[]):
+    def __init__(self, name="", instructions="", ingredients=[]):
         self.name = name
         self.instructions = instructions
         self.ingredients = ingredients
-        self.quantities = quantities
 
     def __repr__(self):
-        return "%s\n %s\n %s " % (self.name, self.instructions, self.ingredients)
+        return "%s\n %s\n %s" % (self.name, self.instructions, self.ingredients)
 
     def makeYaml(self):
         return {'name': self.name, 'instructions': self.instructions, 'ingredients': self.ingredients}
@@ -43,9 +42,9 @@ class ingredient(yaml.YAMLObject):
     solid = ("pound", "lb", "ouce", "gram", "g", "kilogram", "kg")
     fluid = ("teaspoon", "tsp", "tablespoon", "tbs", "cup", "gallon", "pint", "liter", "milliliter", "ml")
 
-    def __init__(self, name="", quantity=None, mass=None, volume=None, parentID=None, quantityName=None):
+    def __init__(self, name="", quantity=None, mass=None, volume=None, quantityName=None):
         self.name = name
-        self.parentID = parentID
+        #self.parentID = parentID
         self.quantityName = quantityName.strip().split(" ")[-1]
         self.quantity = quantity
         self.mass = mass
@@ -68,10 +67,10 @@ class ingredient(yaml.YAMLObject):
     def normalize(self, quantity=0, quantityName=""):
         for val in self.scale.keys():
             if(quantityName.find(val) != -1 and val != "g"):
-                return float(quantity) * self.scale[val]
+                return round(float(quantity) * self.scale[val])
             test = re.search("[0-9][0-9]g", quantityName)
             if(test):
-                return float(quantity) * self.scale[val]
+                return round(float(quantity) * self.scale[val])
         return quantity
 
 def parseJson(recipe_json):
@@ -91,7 +90,7 @@ def parseJson(recipe_json):
                 quantity_num = int(quantity_num[0]) / int(quantity_num[1])
             else:
                 quantity_num = '1'
-            val = ingredient(Ingredient, quantity_num, None, None, None, quantity)
+            val = ingredient(Ingredient, quantity_num, None, None, quantity)
             ingredients.append(val)
             quantities.append(quantity)
 
@@ -103,12 +102,6 @@ def parseJson(recipe_json):
 
     Recipe.instructions = recipe_json["strInstructions"].replace("\n", "")
 
-    for i in range(1,20):
-        quantity = recipe_json["strMeasure" + str(i)]
-        if quantity != '' and quantity is not None:
-            quantities.append(quantity)
-
-    Recipe.quantities = quantities
     return Recipe
 
 def scrape(site):
@@ -116,8 +109,7 @@ def scrape(site):
 
     recipe_json = json.loads(response.text)
     recipe = parseJson(recipe_json["meals"][0])
-
-    print(yaml.dump(recipe.makeYaml(), width = 1000))
+    return yaml.dump(recipe.makeYaml(), width = 1000).strip()
 
 def multiScrape(site):
     response = requests.get(site)
@@ -135,6 +127,6 @@ def multiScrape(site):
     yamls = {}
     for recipe in recipes:
         yamls[recipe.name] = recipe.makeYaml()
-    return yaml.dump(yamls, width = 1000)
+    return yaml.dump(yamls, width = 1000).strip()
     # print(yaml.dump(recipes.makeYaml(), width = 1000))
 
