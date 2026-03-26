@@ -6,7 +6,7 @@ namespace MealShareDotNet.Core.Data.Entities;
 
 [ExcludeFromCodeCoverage]
 [Table("Ingredients")]
-public class Ingredient
+public class Ingredient : ICloneable
 {
     [Key]
     [Required]
@@ -18,9 +18,13 @@ public class Ingredient
 
     public long? ParentId { get; set; }
 
-    [NotMapped]
-    public RecipeIngredient? RecipeIngredient { get; set; }
-
-    [NotMapped]
-    public long? RecipeId => RecipeIngredient?.RecipeId;
+    public object Clone()
+    {
+        return new Ingredient()
+        {
+            Id = Id,
+            Name = (string)Name.Clone(),
+            ParentId = ParentId
+        };
+    }
 }

@@ -10,27 +10,27 @@ using MealShareDotNet.Server.Auth;
 namespace MealShareDotNet.Server.Controllers;
 
 [AllowAnonymous]
-[Route("v1/recipes")]
+[Route("v1/tags")]
 [ApiController]
-public class RecipeControllerV1 : ControllerBase
+public class TagControllerV1 : ControllerBase
 {
-    private readonly IRecipeService _recipes;
+    private readonly ITagService _tags;
 
-    public const int MAX_PAGE_SIZE = 100;
+    public const int MAX_PAGE_SIZE = 1000;
 
-    public RecipeControllerV1(IRecipeService recipes)
+    public TagControllerV1(ITagService tags)
     {
-        _recipes = recipes;
+        _tags = tags;
     }
 
     [HttpGet("listings")]
-    public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
+    public async Task<ActionResult<IEnumerable<TagListingDTO>>> GetTagListings(
             [FromQuery] PageableParams pager
             )
     {
         if (pager.PageSize is null != pager.PageNumber is null)
         {
-            return BadRequest($"PageSize and PageNumber must both be defined or null.");
+            return BadRequest($"PageSize and PageNumber must both be defined or null");
         }
         else if (pager.PageSize > MAX_PAGE_SIZE)
         {
@@ -43,21 +43,21 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        var query = new GetRecipeListingsQuery()
+        var query = new GetTagListingsQuery()
         {
             PageSize = pager.PageSize,
             PageOffset = pager.PageOffset
         };
 
-        return Ok(await _recipes.GetRecipeListingsAsync(query));
+        return Ok(await _tags.GetTagListingsAsync(query));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<RecipeDTO>> GetRecipe(
+    public async Task<ActionResult<IngredientDTO>> GetTag(
             long id
             )
     {
-        var result = await _recipes.GetRecipeAsync(id);
+        var result = await _tags.GetTagAsync(id);
 
         if (result is null)
         {
@@ -68,21 +68,21 @@ public class RecipeControllerV1 : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Recipe>> InsertRecipe(
-            [FromBody] RecipeDTO recipe
+    public async Task<ActionResult<Ingredient>> InsertTag(
+            [FromBody] TagDTO tag
             )
     {
-        return Ok(await _recipes.InsertRecipeAsync(recipe));
+        return Ok(await _tags.InsertTagAsync(tag));
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteRecipe(
+    public async Task<IActionResult> DeleteTag(
             long id
             )
     {
         try
         {
-            await _recipes.DeleteRecipeAsync(id);
+            await _tags.DeleteTagAsync(id);
 
             return NoContent();
         }
@@ -97,18 +97,16 @@ public class RecipeControllerV1 : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<RecipeDTO>> UpdateRecipe(
+    public async Task<ActionResult<TagDTO>> UpdateTag(
             long id,
-            [FromBody] RecipeDTO recipe
+            [FromBody] TagDTO tag
             )
     {
-        recipe.Id = id;
+        tag.Id = id;
 
         try
         {
-            var result = await _recipes.UpdateRecipeAsync(recipe);
-
-            return Ok(result);
+            return Ok(await _tags.UpdateTagAsync(tag));
         }
         catch (KeyNotFoundException)
         {
@@ -118,7 +116,6 @@ public class RecipeControllerV1 : ControllerBase
         {
             return BadRequest();
         }
-        // TODO: Remove or only enable message in dev environment
         catch
         {
             return StatusCode(StatusCodes.Status500InternalServerError);

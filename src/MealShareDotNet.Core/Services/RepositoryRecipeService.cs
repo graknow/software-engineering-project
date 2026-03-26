@@ -1,10 +1,9 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Data.Sqlite;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Repositories;
-using MealShareDotNet.Core.Services;
+
+namespace MealShareDotNet.Core.Services;
 
 public class RepositoryRecipeService : IRecipeService
 {

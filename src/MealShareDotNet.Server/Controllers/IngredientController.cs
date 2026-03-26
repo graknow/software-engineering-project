@@ -10,27 +10,27 @@ using MealShareDotNet.Server.Auth;
 namespace MealShareDotNet.Server.Controllers;
 
 [AllowAnonymous]
-[Route("v1/recipes")]
+[Route("v1/ingredients")]
 [ApiController]
-public class RecipeControllerV1 : ControllerBase
+public class IngredientControllerV1 : ControllerBase
 {
-    private readonly IRecipeService _recipes;
+    private readonly IIngredientService _ingredients;
 
-    public const int MAX_PAGE_SIZE = 100;
+    public const int MAX_PAGE_SIZE = 1000;
 
-    public RecipeControllerV1(IRecipeService recipes)
+    public IngredientControllerV1(IIngredientService ingredients)
     {
-        _recipes = recipes;
+        _ingredients = ingredients;
     }
 
     [HttpGet("listings")]
-    public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
+    public async Task<ActionResult<IEnumerable<IngredientListingDTO>>> GetIngredientListings(
             [FromQuery] PageableParams pager
             )
     {
         if (pager.PageSize is null != pager.PageNumber is null)
         {
-            return BadRequest($"PageSize and PageNumber must both be defined or null.");
+            return BadRequest($"PageSize and PageNumber must both be defined or null");
         }
         else if (pager.PageSize > MAX_PAGE_SIZE)
         {
@@ -43,21 +43,21 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        var query = new GetRecipeListingsQuery()
+        var query = new GetIngredientListingsQuery()
         {
             PageSize = pager.PageSize,
             PageOffset = pager.PageOffset
         };
 
-        return Ok(await _recipes.GetRecipeListingsAsync(query));
+        return Ok(await _ingredients.GetIngredientListingsAsync(query));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<RecipeDTO>> GetRecipe(
+    public async Task<ActionResult<IngredientDTO>> GetIngredient(
             long id
             )
     {
-        var result = await _recipes.GetRecipeAsync(id);
+        var result = await _ingredients.GetIngredientAsync(id);
 
         if (result is null)
         {
@@ -68,21 +68,21 @@ public class RecipeControllerV1 : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Recipe>> InsertRecipe(
-            [FromBody] RecipeDTO recipe
+    public async Task<ActionResult<Ingredient>> InsertIngredient(
+            [FromBody] IngredientDTO ingredient
             )
     {
-        return Ok(await _recipes.InsertRecipeAsync(recipe));
+        return Ok(await _ingredients.InsertIngredientAsync(ingredient));
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteRecipe(
+    public async Task<IActionResult> DeleteIngredient(
             long id
             )
     {
         try
         {
-            await _recipes.DeleteRecipeAsync(id);
+            await _ingredients.DeleteIngredientAsync(id);
 
             return NoContent();
         }
@@ -97,18 +97,16 @@ public class RecipeControllerV1 : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<RecipeDTO>> UpdateRecipe(
+    public async Task<ActionResult<IngredientDTO>> UpdateIngredient(
             long id,
-            [FromBody] RecipeDTO recipe
+            [FromBody] IngredientDTO ingredient
             )
     {
-        recipe.Id = id;
+        ingredient.Id = id;
 
         try
         {
-            var result = await _recipes.UpdateRecipeAsync(recipe);
-
-            return Ok(result);
+            return Ok(await _ingredients.UpdateIngredientAsync(ingredient));
         }
         catch (KeyNotFoundException)
         {
@@ -118,7 +116,6 @@ public class RecipeControllerV1 : ControllerBase
         {
             return BadRequest();
         }
-        // TODO: Remove or only enable message in dev environment
         catch
         {
             return StatusCode(StatusCodes.Status500InternalServerError);
