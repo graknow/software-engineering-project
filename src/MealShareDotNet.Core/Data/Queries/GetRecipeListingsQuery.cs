@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using MealShareDotNet.Core.Data.Common;
 
 namespace MealShareDotNet.Core.Data.Queries;
 
-public sealed class GetRecipeListingsQuery
+[ExcludeFromCodeCoverage]
+public class GetRecipeListingsQuery
 {
     public string? Name { get; set; }
     public int? CookTime { get; set; }

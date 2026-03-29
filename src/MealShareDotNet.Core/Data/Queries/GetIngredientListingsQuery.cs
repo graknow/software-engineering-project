@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace MealShareDotNet.Core.Data.Queries;
 
-public sealed class GetIngredientListingsQuery
+[ExcludeFromCodeCoverage]
+public class GetIngredientListingsQuery
 {
     public string? Name { get; set; }
 
