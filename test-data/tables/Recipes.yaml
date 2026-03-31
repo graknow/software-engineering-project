@@ -75,6 +75,7 @@
     for 25 minutes. Sprinkle chocolate chips over the dough while it's still hot, then let it
     melt to be spread over the dough. Combine sugar, peanut butter, and milk. Mix well. drizzle
     peanut butter mixture over the top, and cut into bars.
+  Id: 8
   Name: Double Cheese Pasta Primavera
   ServingQuantity: 4
   Instructions: >-
@@ -82,3 +83,17 @@
     Add broccoli and peppers; cook and stir for 5 minutes, until the vegetables are
     crisp and tender. Stir in peas; cook until they're heated through. Add prepared
     dinner and basil; mix lightly. Top with parmesan cheese.
+  Id: 9
+  Name: Spinach Pasta Toss
+  INstructions: >-
+    Combine tomatoes, pasta, and water in a saucepan, and bring it to a boil, stirring
+    the whole time. Cover, and simmer for 10 minutes. Uncover, and then simmer for an
+    additional minute, until the pasta is tender. Add half the spinach and simmer until
+    the leaves are wilted. Repeat for the next half, then finally serve topped with cheese.
+  Id: 10
+  Name: Yeast-free pizza dough
+  Instructions: >-
+    Preheat oven to 425 degrees Farenheit. Combine and stir all ingredients in a large bowl
+    until they begin to form a ball of dough. Knead the dough in the bowl until it smooth.
+    Form into a ball, then press into an oiled pizza pan or onto a baking sheet. Place toppings
+    on the pizza and bake for about 30 minutes.
