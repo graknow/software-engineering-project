@@ -15,4 +15,4 @@ args = parser.parse_args()
 name = args.name
 
 site = "https://www.themealdb.com/api/json/v1/1/search.php?s=" + name
-print(multiScrape(site))
+print(scrape(site))

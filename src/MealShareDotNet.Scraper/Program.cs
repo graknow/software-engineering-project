@@ -5,7 +5,8 @@ class Program
     async static Task Main(string[] args)
     {
         ScraperService.Initialize();
-        var recipes = await ScraperService.getRecipe(ScraperService.ScraperList[3], "Canadian");
+        List<string> arguments = ["Canadian"];
+        var recipes = await ScraperService.ScraperList[3].getRecipe(arguments);
         foreach (var recipe in recipes)
         {
             Console.WriteLine(recipe.Name);

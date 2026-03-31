@@ -15,5 +15,4 @@ args = parser.parse_args()
 area = args.name
 
 site = "https://www.themealdb.com/api/json/v1/1/filter.php?a=" + area
-print(site)
 print(multiScrape(site))

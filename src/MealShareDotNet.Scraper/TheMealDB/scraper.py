@@ -109,7 +109,9 @@ def scrape(site):
 
     recipe_json = json.loads(response.text)
     recipe = parseJson(recipe_json["meals"][0])
-    return yaml.dump(recipe.makeYaml(), width = 1000).strip()
+    recipes = []
+    recipes.append(recipe.makeYaml())
+    return yaml.dump(recipes, width = 1000).strip()
 
 def multiScrape(site):
     response = requests.get(site)
@@ -124,9 +126,9 @@ def multiScrape(site):
             recipe_json = json.loads(response.text)
             recipes.append(parseJson(recipe_json["meals"][0]))
             # print(parseJson(recipe_json["meals"][0]))
-    yamls = {}
+    yamls = []
     for recipe in recipes:
-        yamls[recipe.name] = recipe.makeYaml()
+        yamls.append(recipe.makeYaml())
     return yaml.dump(yamls, width = 1000).strip()
     # print(yaml.dump(recipes.makeYaml(), width = 1000))
 

@@ -7,31 +7,33 @@ import subprocess
 import argparse
 import re
 
+class functionalityHelper(argparse.Action):
+    def __call__(self):
+        determineFunctionality()
+
 parser = argparse.ArgumentParser(
                     prog='Scraper Handler',
                     description='Allows for a simple call of scraper name and arguments i.e.: handler.py ingredient chicken_breast',
                     epilog='Stop reading this, it is a waste of your time')
 
-parser.add_argument("name", help="Name of the scraper to run")
+parser.add_argument("-n", "--name", help="Name of the scraper to run")
 parser.add_argument("-a", "--arguments", help="additional arguments, such as the ingredient being searched for")
+parser.add_argument("-d", "--determine", help="Update the list of scrapers in the scrapers.txt file", action='store_true')
 args = parser.parse_args()
 
 def determineFunctionality():
-    scrapers = glob.glob("./*Scraper.py")
-    names = open("./scrapers.txt", "w")
+    fileName = __file__
+    path = fileName.replace(os.path.basename(__file__), "")
+    scrapers = glob.glob(path + "*Scraper.py")
+
+    names = open(path + "scrapers.txt", "w")
+    #print(scrapers)
     firstLines = ""
+    fileNames = ""
     for scraper in scrapers:
-        with open(scraper, "r") as file:
-            firstline = file.readline().strip()
-            if("Usage:" in firstline):
-                firstline = firstline.split(" ")
-                for item in firstline:
-                    name = re.findall(".Scraper.py", item)
-                    if len(name) != 0:
-                        firstLines = firstLines + item.split("Scraper.py")[0] + "\n"
-
-    names.write(firstLines)
-
+        name = re.split("Scraper.py$", scraper)
+        fileNames = fileNames + name[0].split("/")[-1] + "\n"
+    names.write(fileNames)
 
 def scrape(scraperName, arguments):
     #Determine if the user has stated the available scrapers
@@ -55,7 +57,10 @@ def scrape(scraperName, arguments):
     scraperName = os.path.join(os.path.dirname(__file__), scraperName + "Scraper.py")
     subprocess.run(["python", scraperName, systemArguements.strip()])
 
-scrape(args.name, args.arguments)
+if args.determine:
+    determineFunctionality()
+else:
+    scrape(args.name, args.arguments)
 
 
 
