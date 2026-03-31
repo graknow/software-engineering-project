@@ -5,5 +5,10 @@ namespace MealShareDotNet.Client.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private string _greeting = "Welcome to Avalonia!";
+    private ObservableObject _currentPage;
+
+    public MainViewModel(ObservableObject initPage)
+    {
+        _currentPage = initPage;
+    }
 }

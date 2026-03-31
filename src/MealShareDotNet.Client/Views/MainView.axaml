@@ -12,8 +12,8 @@
     <vm:MainViewModel />
 
   </Design.DataContext>
-  <StackPanel>
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    <TextBlock Text="Test" />
-    </StackPanel>
+  <DockPanel>
+    <TextBlock Text="Test" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <ContentControl Content="{Binding CurrentPage}"/>
+  </DockPanel>
 </UserControl>
