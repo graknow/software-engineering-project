@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MealShareDotNet.Client.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MealShareDotNet.Client.Views.MealPlanView"
+             x:DataType="vm:MealPlanViewModel">
+  <StackPanel Orientation="Vertical" Spacing="10" HorizontalAlignment="Left">
+    <TextBlock FontSize="18">Meal Plan</TextBlock>
+    <StackPanel Orientation="Horizontal">
+      <Button Content="WOW" />
+    </StackPanel>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding DailyMealPlans}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Rows="1" Columns="7" MaxWidth="1050"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+
+        <ItemsControl.Styles>
+          <Style Selector="Border.currentDay">
+            <Setter Property="Background" Value="LightBlue" />
+          </Style>
+          <Style Selector="Border.otherDay">
+            <Setter Property="Background" Value="LightGray" />
+          </Style>
+        </ItemsControl.Styles>
+
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border MaxWidth="150"
+                    Classes.currentDay="{Binding CurrentDay}"
+                    Classes.otherDay="{Binding !CurrentDay}">
+              <StackPanel Orientation="Vertical">
+                <TextBlock>
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} ({1})">
+                      <Binding Path="DayOfWeek" />
+                      <Binding Path="Date" />
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+                <ItemsControl ItemsSource="{Binding Plans}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Vertical" Spacing="5"/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Width="150" Background="Lavender">
+                        <TextBlock Text="{Binding RecipeName}" TextWrapping="Wrap"/>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </StackPanel>
+</UserControl>

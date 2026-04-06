@@ -25,14 +25,14 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel(new MealPlanView())
+                DataContext = new MainViewModel(new MealPlanViewModel())
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel(new MealPlanView())
+                DataContext = new MainViewModel(new MealPlanViewModel())
             };
         }
 
