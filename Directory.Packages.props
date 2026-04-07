@@ -19,6 +19,8 @@
 
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
 
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+
     <!-- Database  -->
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.3" />
     <PackageVersion Include="Dapper" Version="2.1.66" />

@@ -103,9 +103,34 @@ public class MockRecipeRepository : IRecipeRepository
         return (Ingredient?)Ingredients.SingleOrDefault(i => i.Id == id)?.Clone();
     }
 
+    public async Task<long> GetRecipeCount()
+    {
+        return Recipes.Count;
+    }
+
     public async Task<Recipe?> GetRecipeByIdAsync(long id)
     {
-        return (Recipe?)Recipes.SingleOrDefault(r => r.Id == id)?.Clone();
+        var recipe = (Recipe?)Recipes.SingleOrDefault(r => r.Id == id)?.Clone();
+
+        if (recipe is null)
+        {
+            return null;
+        }
+
+        recipe.RecipeIngredients = Ris.Where(ri => ri.RecipeId == id).ToList();
+        recipe.RecipeTags = Rts.Where(rt => rt.RecipeId == id).ToList();        
+
+        foreach (var ri in recipe.RecipeIngredients)
+        {
+            ri.Ingredient = Ingredients.Single(i => i.Id == ri.IngredientId);
+        }
+
+        foreach (var rt in recipe.RecipeTags)
+        {
+            rt.Tag = Tags.Single(t => t.Id == rt.TagId);
+        }
+
+        return recipe;
     }
 
     public async Task<Tag?> GetTagByIdAsync(long id)

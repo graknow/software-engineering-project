@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:MealShareDotNet.Client.ViewModels"
+             xmlns:vm="using:MealShareDotNet.Client.ViewModels.MealPlan"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MealShareDotNet.Client.Views.MealPlanView"
+             x:Class="MealShareDotNet.Client.Views.MealPlan.MealPlanView"
              x:DataType="vm:MealPlanViewModel">
   <StackPanel Orientation="Vertical" Spacing="10" HorizontalAlignment="Left">
     <TextBlock FontSize="18">Meal Plan</TextBlock>
     <StackPanel Orientation="Horizontal">
-      <Button Content="WOW" />
+      <!-- Calendar date picker, check box for focusing on the selected date vs calendar week, add fields? -->
     </StackPanel>
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding DailyMealPlans}">
@@ -20,10 +20,10 @@
         </ItemsControl.ItemsPanel>
 
         <ItemsControl.Styles>
-          <Style Selector="Border.currentDay">
+          <Style Selector="Border.current-day">
             <Setter Property="Background" Value="LightBlue" />
           </Style>
-          <Style Selector="Border.otherDay">
+          <Style Selector="Border.other-day">
             <Setter Property="Background" Value="LightGray" />
           </Style>
         </ItemsControl.Styles>
@@ -31,17 +31,11 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Border MaxWidth="150"
-                    Classes.currentDay="{Binding CurrentDay}"
-                    Classes.otherDay="{Binding !CurrentDay}">
+                    Classes.current-day="{Binding CurrentDay}"
+                    Classes.other-day="{Binding !CurrentDay}">
               <StackPanel Orientation="Vertical">
-                <TextBlock>
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0} ({1})">
-                      <Binding Path="DayOfWeek" />
-                      <Binding Path="Date" />
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+                <TextBlock Text="{Binding DayOfWeek}" />
+                <TextBlock Text="{Binding Date}" />
                 <ItemsControl ItemsSource="{Binding Plans}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

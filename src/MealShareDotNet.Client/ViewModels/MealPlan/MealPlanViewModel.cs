@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 
-namespace MealShareDotNet.Client.ViewModels;
+namespace MealShareDotNet.Client.ViewModels.MealPlan;
 
 public partial class MealPlanViewModel : ViewModelBase
 {

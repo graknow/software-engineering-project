@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.ComponentModel.Design;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Queries;
@@ -33,6 +35,19 @@ public class RepositoryMealPlanService : IMealPlanService
 
     public async Task<IEnumerable<MealPlanDTO>> GetMealPlansAsync(GetMealPlansQuery query)
     {
+        var entities = await _db.SearchMealPlansAsync(query);
+
+        return entities.Select(MealPlanDTO.FromEntity);
+    }
+
+    public async Task<IEnumerable<MealPlanDTO>> GetWeekMealPlansAsync(DateTime startDate)
+    {
+        var query = new GetMealPlansQuery()
+        {
+            Start = startDate,
+            End = startDate.AddDays(7)
+        };
+
         var entities = await _db.SearchMealPlansAsync(query);
 
         return entities.Select(MealPlanDTO.FromEntity);

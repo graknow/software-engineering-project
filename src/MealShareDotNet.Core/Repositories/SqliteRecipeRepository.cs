@@ -182,6 +182,17 @@ public class SqliteRecipeRepository :
         return conn.ExecuteScalarAsync<bool>(sql, new { Id = id });
     }
 
+    public Task<long> GetRecipeCount()
+    {
+        var sql = """
+            SELECT COUNT(*) FROM Recipes;
+            """;
+        
+        using var queryConn = GetNewConnectionIfNecessary();
+        var conn = queryConn is not null ? queryConn : _activeConnection;
+        return conn.ExecuteScalarAsync<long>(sql);
+    }
+
     public async Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
         Validator.ValidateObject(recipe, new ValidationContext(recipe));

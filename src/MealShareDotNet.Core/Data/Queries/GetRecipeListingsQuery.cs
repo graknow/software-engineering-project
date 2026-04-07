@@ -12,5 +12,5 @@ public class GetRecipeListingsQuery
 
     // TODO: Replace with pageable parameter as Pager
     public int? PageSize { get; set; }
-    public int? PageOffset { get; set; }
+    public long? PageOffset { get; set; }
 }

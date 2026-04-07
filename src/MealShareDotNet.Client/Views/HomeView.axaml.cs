@@ -1,10 +1,11 @@
+
 using Avalonia.Controls;
 
 namespace MealShareDotNet.Client.Views;
 
-public partial class MealPlanView : UserControl
+public partial class HomeView : UserControl
 {
-    public MealPlanView()
+    public HomeView()
     {
         InitializeComponent();
     }
