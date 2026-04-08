@@ -21,11 +21,15 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        
+
         var collection = new ServiceCollection();
         var fullConnString = ConnectionStringUtil.GenerateConnectionString("DataSource=recipe.db;Cache=Shared");
         collection.AddCommonServices(fullConnString);
-                var provider = collection.BuildServiceProvider();
+        collection.AddTransient<MainViewModel>();
+        var provider = collection.BuildServiceProvider();
 
+        var vm = provider.GetRequiredService<MainViewModel>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -34,14 +38,14 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = vm
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel()
+                DataContext = vm
             };
         }
 
