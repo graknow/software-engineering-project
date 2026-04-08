@@ -14,25 +14,20 @@
     <PackageVersion Include="Avalonia.iOS" Version="11.3.11" />
     <PackageVersion Include="Avalonia.Browser" Version="11.3.11" />
     <PackageVersion Include="Avalonia.Android" Version="11.3.11" />
-
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-
     <!-- Database  -->
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.3" />
     <PackageVersion Include="Dapper" Version="2.1.66" />
     <PackageVersion Include="Dapper.SqlBuilder" Version="2.1.66" />
-
     <!-- Data serialization -->
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-
     <!-- Testing -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageVersion Include="NUnit" Version="4.3.2" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.7.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
-
   </ItemGroup>
 </Project>

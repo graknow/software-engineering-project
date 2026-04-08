@@ -2,13 +2,16 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Markup.Xaml;
+using MealShareDotNet.Client.Extensions;
 using MealShareDotNet.Client.ViewModels;
 using MealShareDotNet.Client.Views;
+using MealShareDotNet.Core.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace MealShareDotNet.Client;
-
+// IrecipeService 
 public partial class App : Application
 {
     public override void Initialize()
@@ -18,6 +21,16 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        
+
+        var collection = new ServiceCollection();
+        var fullConnString = ConnectionStringUtil.GenerateConnectionString("DataSource=recipe.db;Cache=Shared");
+        collection.AddCommonServices(fullConnString);
+        collection.AddTransient<MainViewModel>();
+        var provider = collection.BuildServiceProvider();
+
+        var vm = provider.GetRequiredService<MainViewModel>();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
@@ -25,14 +38,14 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = vm
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel()
+                DataContext = vm
             };
         }
 

@@ -3,17 +3,61 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MealShareDotNet.Client.ViewModels"
+             xmlns:dvm="using:MealShareDotNet.Client.ViewModels.DesignTime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MealShareDotNet.Client.Views.MainView"
              x:DataType="vm:MainViewModel">
   <Design.DataContext>
     <!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
+   <!-- <vm:MainViewModel /> -->
 
+   <dvm:MainViewDesignModel />
   </Design.DataContext>
-  <StackPanel>
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    <TextBlock Text="Test" />
-    </StackPanel>
+  <Grid RowDefinitions= "Auto, *, Auto">
+   <!--  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <TextBlock Text="Test" /> -->
+
+    <Grid Grid.Row="0" Background="Orange" Height="40" ColumnDefinitions="Auto, Auto,*, Auto, Auto">
+      <!--Top area title bar and file / save / etc -->
+      <Rectangle Grid.Column="0" Fill="Red" Width = "60"> </Rectangle>
+      <Rectangle Grid.Column="1" Fill="Blue" Width = "60"> </Rectangle>
+      <StackPanel VerticalAlignment ="Center" HorizontalAlignment ="Center" Grid.Column="2">
+        <Label FontWeight="Black" Content="{Binding TestRecipeName}" > </Label>
+
+        
+      </StackPanel>
+
+      <Rectangle Grid.Column="3" Fill="Red" Width = "60"> </Rectangle>
+      <Rectangle Grid.Column="5" Fill="Red" Width = "60"> </Rectangle>
+
+
+    </Grid>
+    
+    <!--Featured food area --> 
+    <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *" Background="DimGray">
+
+      <Rectangle Grid.Column="0" Fill="Purple" Width="150"> </Rectangle>
+      <Rectangle Grid.Column="1" Fill="Gray">  </Rectangle>
+     
+        <WrapPanel Grid.Column="0" Orientation="Vertical" ItemWidth="150" ItemHeight="60">
+            <Button Content="Item 1" />
+        <Button Content="Item 2" />
+        <Button Content="Item 3" />
+        <Button Content="Item 4" />
+        </WrapPanel>
+      <Rectangle Grid.Column="2" Fill="Brown"> </Rectangle>
+
+        
+
+      
+    </Grid>
+
+
+    <Grid>
+     <!-- 3/4 bottom area, thinking of splitting this up into a stack of buttons on the left
+     and a big rectangle of something to right--> 
+    </Grid>
+
+   </Grid>
 </UserControl>
