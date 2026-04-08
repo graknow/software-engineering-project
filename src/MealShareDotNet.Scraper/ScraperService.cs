@@ -58,6 +58,7 @@ public static class ScraperService
 
 
     }
+
     public static async void Initialize()
     {
         string path = "./TheMealDB/scrapers.txt";
