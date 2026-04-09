@@ -6,16 +6,46 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MealShareDotNet.Client.Views.MealPlan.MealPlanView"
              x:DataType="vm:MealPlanViewModel">
-  <StackPanel Orientation="Vertical" Spacing="10" HorizontalAlignment="Left">
-    <TextBlock FontSize="18">Meal Plan</TextBlock>
-    <StackPanel Orientation="Horizontal">
-      <!-- Calendar date picker, check box for focusing on the selected date vs calendar week, add fields? -->
-    </StackPanel>
-    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <TextBlock FontSize="18" Grid.Row="0">Meal Plan</TextBlock>
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="100" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="100" />
+        <ColumnDefinition Width="100" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <DatePicker SelectedDate="{Binding SelectedDateTime}" Grid.Column="0" />
+      <CheckBox IsChecked="{Binding FocusSelectedDate}" Content="Focus date" Grid.Column="1" />
+      <Button>Add</Button>
+      <StackPanel Orientation="Vertical" Grid.Column="4">
+        <TextBox Text="{Binding AddMealPlan.EventName}" />
+        <ComboBox SelectedItem="{Binding AddMealPlan.Recipe}"
+                  ItemsSource="{Binding RecipeOptions}" >
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <StackPanel Orientation="Vertical" Grid.Column="5">
+        <DatePicker SelectedDate="{Binding AddMealPlanDate}"/>
+        <TimePicker SelectedTime="{Binding AddMealPlanTime}" ClockIdentifier="12HourClock" MinuteIncrement="15"/>
+      </StackPanel>
+    </Grid>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Row="2">
       <ItemsControl ItemsSource="{Binding DailyMealPlans}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <UniformGrid Rows="1" Columns="7" MaxWidth="1050"/>
+            <UniformGrid Rows="1" Columns="7" MaxWidth="1050" />
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
 
@@ -31,11 +61,10 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Border MaxWidth="150"
-                    Classes.current-day="{Binding CurrentDay}"
-                    Classes.other-day="{Binding !CurrentDay}">
+                    Classes.current-day="{Binding Selected}"
+                    Classes.other-day="{Binding !Selected}">
               <StackPanel Orientation="Vertical">
-                <TextBlock Text="{Binding DayOfWeek}" />
-                <TextBlock Text="{Binding Date}" />
+                <TextBlock Text="{Binding Date.DayOfWeek}" />
                 <ItemsControl ItemsSource="{Binding Plans}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -57,5 +86,5 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </ScrollViewer>
-  </StackPanel>
+  </Grid>
 </UserControl>

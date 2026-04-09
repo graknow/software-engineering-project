@@ -5,6 +5,6 @@ namespace MealShareDotNet.Core.Data.Queries;
 [ExcludeFromCodeCoverage]
 public class GetMealPlansQuery
 {
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
+    public DateOnly Start { get; set; }
+    public DateOnly End { get; set; }
 }

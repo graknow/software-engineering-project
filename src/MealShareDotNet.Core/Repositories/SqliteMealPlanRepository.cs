@@ -68,14 +68,27 @@ public class SqliteMealPlanRepository :
                 MP.Id,
                 MP.RecipeId,
                 MP.EventName,
-                MP.ScheduledTime
+                MP.ScheduledTime,
+                Recipe.Id AS RecipeId,
+                Recipe.Name,
+                Recipe.Instructions
             FROM MealPlans MP
-            WHERE MP.ScheduledTime BETWEEN @Start AND @End;
+            INNER JOIN Recipes as Recipe ON Recipe.Id = MP.RecipeId
+            WHERE MP.ScheduledTime >= @Start AND MP.ScheduledTime <= @End;
             """;
 
         using var conn = _connection;
 
-        return conn.QueryAsync<MealPlan>(sql, query);
+        return conn.QueryAsync<MealPlan, Recipe, MealPlan>(sql, (p, r) =>
+        {
+            p.Recipe = r;
+            return p;
+        },
+        new
+        {
+            Start = query.Start.ToDateTime(TimeOnly.MinValue),
+            End = query.End.ToDateTime(TimeOnly.MinValue),
+        }, splitOn: "RecipeId");
     }
 
     public Task<MealPlan> UpdateMealPlanAsync(MealPlan meal)

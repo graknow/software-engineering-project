@@ -40,7 +40,7 @@ public class RepositoryMealPlanService : IMealPlanService
         return entities.Select(MealPlanDTO.FromEntity);
     }
 
-    public async Task<IEnumerable<MealPlanDTO>> GetWeekMealPlansAsync(DateTime startDate)
+    public async Task<IEnumerable<MealPlanDTO>> GetWeekMealPlansAsync(DateOnly startDate)
     {
         var query = new GetMealPlansQuery()
         {

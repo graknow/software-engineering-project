@@ -8,6 +8,7 @@ using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Tests.Unit.Mocks;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
+using System.Diagnostics;
 
 namespace MealShareDotNet.Core.Tests.Unit.Services;
 
@@ -75,7 +76,7 @@ public class RecipeRepositoryServiceTests
     public async Task GetRandomDailyRecipe_NoParameters_FullRecipe()
     {
         var recipe = await _recipeService.GetRandomDailyRecipeAsync();
-        
+
         // Should get the same recipe on the same day
         Assert.That(recipe, Is.Not.Null);
         Assert.That((await _recipeService.GetRandomDailyRecipeAsync())?.Name, Is.EqualTo(recipe?.Name));

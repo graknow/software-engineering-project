@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import datetime
 import os
 import sqlite3
 import yaml
@@ -24,12 +25,23 @@ def get_value_entry(row: dict, columns: list[str]) -> list[str]:
         if v is None:
             v = "NULL"
         elif isinstance(v, str):
-            v = f"'{v}'"
+            if v.startswith("$$"):
+                v = f"'{parse_datetime(v[2:])}'"
+            else:
+                v = f"'{v}'"
         else:
             v = str(v)
         value.append(v)
 
     return value
+
+
+def parse_datetime(data: str) -> datetime.datetime:
+    today = datetime.datetime.now()
+
+    (day_offset, hour, minute) = [int(s) for s in data.split(" ")]
+
+    return today.replace(day=today.day + day_offset, hour=hour, minute=minute, second=0, microsecond=0)
 
 
 def wipe_table(db_path: str, table_name: str):

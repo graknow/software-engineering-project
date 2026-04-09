@@ -1,24 +1,31 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MealShareDotNet.Client.Extensions;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Services;
 
 namespace MealShareDotNet.Client.ViewModels.MealPlan;
 
 public partial class MealPlanViewModel : ViewModelBase
 {
+    private readonly IMealPlanService _mealPlans;
+    private readonly IRecipeService _recipes;
+
     public partial class DailyMealPlanVM : ViewModelBase
     {
         [ObservableProperty]
-        private bool _currentDay;
+        private bool _selected;
 
         [ObservableProperty]
-        private string _dayOfWeek = string.Empty;
-
-        [ObservableProperty]
-        private string _date = string.Empty;
+        private DateOnly _date;
 
         [ObservableProperty]
         private ObservableCollection<MealPlanVM> _plans = [];
@@ -28,75 +35,83 @@ public partial class MealPlanViewModel : ViewModelBase
     {
         [ObservableProperty]
         private string _recipeName = string.Empty;
+
+        [ObservableProperty]
+        private TimeOnly? _scheduledTime;
     }
 
     [ObservableProperty]
-    private ObservableCollection<DailyMealPlanVM> _dailyMealPlans;
+    private ObservableCollection<DailyMealPlanVM> _dailyMealPlans = [];
 
-    public MealPlanViewModel()
+    [ObservableProperty]
+    private DateTimeOffset _selectedDateTime = DateTime.Now;
+
+    private DateOnly _selectedDate => DateOnly.FromDateTime(SelectedDateTime.DateTime);
+
+    [ObservableProperty]
+    private DateTimeOffset? _addMealPlanDate;
+
+    [ObservableProperty]
+    private TimeSpan? _addMealPlanTime;
+
+    [ObservableProperty]
+    private MealPlanDTO _addMealPlan;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _recipeOptions = [];
+
+    [ObservableProperty]
+    private bool _focusSelectedDate = false;
+
+    public MealPlanViewModel(IMealPlanService mealPlans, IRecipeService recipes)
     {
-        DailyMealPlans = new ObservableCollection<DailyMealPlanVM>(new DailyMealPlanVM[7]
-        {
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Sunday",
-                Date = "04/05/2026",
-                Plans = []
-            },
-            new()
-            {
-                CurrentDay = true,
-                DayOfWeek = "Monday",
-                Date = "04/06/2026",
-                Plans = new ObservableCollection<MealPlanVM>([
-                    new()
-                    {
-                        RecipeName = "Recipe1 Somewhat long name"
-                    },
-                    new()
-                    {
-                        RecipeName = "TestRecipe2"
-                    }
-                ])
-            },
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Tuesday",
-                Date = "04/07/2026",
-                Plans = []
-            },
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Wednesday",
-                Date = "04/08/2026",
-                Plans = []
-            },
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Thursday",
-                Date = "04/09/2026",
-                Plans = []
-            },
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Friday",
-                Date = "04/10/2026",
-                Plans = []
-            },
-            new()
-            {
-                CurrentDay = false,
-                DayOfWeek = "Saturday",
-                Date = "04/11/2026",
-                Plans = []
-            },
-        });
+        _mealPlans = mealPlans;
+        _recipes = recipes;
 
-        DailyMealPlans[1].CurrentDay = true;
+        Task.Run(async () => RecipeOptions = new ObservableCollection<string>(
+            (await _recipes.GetRecipeListingsAsync(new())).Select(r => r.Name))
+            ).Wait();
+        GenerateWeekView();
+    }
+
+    private async void GenerateWeekView()
+    {
+        var viewStartDate = FocusSelectedDate ? _selectedDate.AddDays(-3) : _selectedDate.StartOfWeek(DayOfWeek.Sunday);
+
+        var plans = await _mealPlans.GetWeekMealPlansAsync(viewStartDate);
+
+        DailyMealPlans.Clear();
+
+        for (int i = 0; i < 7; i++)
+        {
+            var date = viewStartDate.AddDays(i);
+
+            var datePlans = plans
+                .Where(p => DateOnly.FromDateTime(p.ScheduledTime) == date)
+                .Select(p => new MealPlanVM()
+                {
+                    RecipeName = p.Recipe.Name,
+                    ScheduledTime = TimeOnly.FromDateTime(p.ScheduledTime)
+                });
+            
+            var isCurrentDay = date.CompareTo(_selectedDate) == 0;
+
+            DailyMealPlans.Add(new()
+            {
+                Date = date,
+                Plans = new ObservableCollection<MealPlanVM>(datePlans),
+                Selected = isCurrentDay
+            });
+        }        
+    }
+
+    partial void OnFocusSelectedDateChanged(bool value)
+    {
+        GenerateWeekView();
+    }
+
+    partial void OnSelectedDateTimeChanged(DateTimeOffset value)
+    {
+        GenerateWeekView();
     }
 }
