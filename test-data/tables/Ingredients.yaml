@@ -13,7 +13,7 @@
 - Id: 6
   Name: Milk
 - Id: 7
-  Name: Chocolate chips
+  Name: Chocolate chip
 - Id: 8
   Name: Butter
 - Id: 9
@@ -31,4 +31,94 @@
 - Id: 15
   Name: Vanilla ice cream
 - Id: 16
-  Name: Toasted almonds
+  Name: Toasted almond
+- Id: 17
+  Name: RAGU Cheese Creations Double Cheddar Sauce
+- Id: 18
+  Name: Tomato
+- Id: 19
+  Name: Bacon
+- Id: 20
+  Name: Italian bread slice
+- Id: 21
+  Name: Vanilla extract
+- Id: 22
+  Name: Puff pastry
+- Id: 23
+  Name: Vanilla pudding mix
+- Id: 24
+  Name: Whipped topping
+- Id: 25
+  Name: Semisweet baking chocolate
+- Id: 26
+  Name: New potato
+- Id: 27
+  Name: Water
+- Id: 28
+  Name: Cream cheese
+- Id: 29
+  Name: Chive
+- Id: 30
+  Name: Dill weed
+- Id: 31
+  Name: Brown sugar
+- Id: 32
+  Name: Peanut butter
+- Id: 33
+  Name: Baking soda
+- Id: 34
+  Name: Oats
+- Id: 35
+  Name: Velveeta shells boxed dinner
+- Id: 36
+  Name: Zesty Italian light dressing
+- Id: 37
+  Name: Broccoli
+- Id: 38
+  Name: Bell pepper
+- Id: 39
+  Name: Peas
+- Id: 40
+  Name: Basil
+- Id: 41
+  Name: Parmesan cheese, grated
+- Id: 42
+  Name: Tomatoes, canned
+- Id: 43
+  Name: Penne pasta
+- Id: 44
+  Name: Baby spinach
+- Id: 45
+  Name: Olive oil
+- Id: 46
+  Name: Zucchini
+- Id: 47
+  Name: Onion
+- Id: 48
+  Name: Garlic, clove
+- Id: 49
+  Name: Kraft Natural Three Cheese Crumbles
+- Id: 50
+  Name: Mushroom
+- Id: 51
+  Name: Egg white
+- Id: 52
+  Name: Ricotta cheese
+- Id: 53
+  Name: Mozzarella cheese
+- Id: 54
+  Name: Manicotti shell
+- Id: 55
+  Name: Pasta sauce
+- Id: 56
+  Name: Lettuce
+- Id: 57
+  Name: Black beans, canned and drained
+- Id: 58
+  Name: Whole kernel corn, canned and drained
+- Id: 59
+  Name: Salsa
+- Id: 60
+  Name: Ranch dressing
+- Id: 61
+  Name: Tortilla chips
