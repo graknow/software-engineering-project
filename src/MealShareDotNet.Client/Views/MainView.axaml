@@ -12,8 +12,21 @@
     <vm:MainViewModel />
 
   </Design.DataContext>
-  <StackPanel>
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    <TextBlock Text="Test" />
-    </StackPanel>
+  <DockPanel>
+    <Border Background="LightGreen" DockPanel.Dock="Left">
+        <ListBox ItemsSource="{Binding MenuItems}"
+                 SelectedItem="{Binding SelectedMenuItem}"
+                 Background="Transparent">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="8,4">
+                        <!-- <PathIcon Data="{Binding Icon}" Width="16" Height="16" /> -->
+                        <TextBlock Text="{Binding Title}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Border>
+    <ContentControl Content="{Binding CurrentPage}"/>
+  </DockPanel>
 </UserControl>

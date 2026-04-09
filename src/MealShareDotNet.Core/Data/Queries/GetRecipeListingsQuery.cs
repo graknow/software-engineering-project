@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using MealShareDotNet.Core.Data.Common;
 
 namespace MealShareDotNet.Core.Data.Queries;
 
-public sealed class GetRecipeListingsQuery
+[ExcludeFromCodeCoverage]
+public class GetRecipeListingsQuery
 {
     public string? Name { get; set; }
     public int? CookTime { get; set; }
@@ -10,5 +12,5 @@ public sealed class GetRecipeListingsQuery
 
     // TODO: Replace with pageable parameter as Pager
     public int? PageSize { get; set; }
-    public int? PageOffset { get; set; }
+    public long? PageOffset { get; set; }
 }

@@ -182,6 +182,17 @@ public class SqliteRecipeRepository :
         return conn.ExecuteScalarAsync<bool>(sql, new { Id = id });
     }
 
+    public Task<long> GetRecipeCount()
+    {
+        var sql = """
+            SELECT COUNT(*) FROM Recipes;
+            """;
+        
+        using var queryConn = GetNewConnectionIfNecessary();
+        var conn = queryConn is not null ? queryConn : _activeConnection;
+        return conn.ExecuteScalarAsync<long>(sql);
+    }
+
     public async Task<Recipe> InsertRecipeAsync(Recipe recipe)
     {
         Validator.ValidateObject(recipe, new ValidationContext(recipe));
@@ -466,8 +477,8 @@ public class SqliteRecipeRepository :
     public async Task DeleteTagAsync(long id)
     {
         var sql = """
-            DELETE FROM RecipeTag AS RT WHERE RT.TagID = @Id;
-            DELETE FROM Tags AS Tag WHERE Tag.ID = @Id;
+            DELETE FROM RecipeTag AS RT WHERE RT.TagId = @Id;
+            DELETE FROM Tags AS Tag WHERE Tag.Id = @Id;
             """;
 
         var rowsAffected = await _activeConnection.ExecuteAsync(sql, new { Id = id }, _transaction);
@@ -494,7 +505,7 @@ public class SqliteRecipeRepository :
     {
         if (_transaction is not null)
         {
-            // maybe throw an error for being an idiot.
+            // TODO: maybe throw an error for being an idiot.
             Rollback();
         }
         _connection = new SqliteConnection(_connectionString);

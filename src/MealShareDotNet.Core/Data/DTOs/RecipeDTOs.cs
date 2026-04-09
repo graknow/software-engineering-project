@@ -20,6 +20,7 @@ public class RecipeListingDTO
         return new()
         {
             Id = recipe.Id,
+            Name = recipe.Name,
             CookTime = recipe.CookTime,
             ServingQuantity = recipe.ServingQuantity,
             UpdatedDate = recipe.UpdatedDate,

@@ -2,17 +2,22 @@ using System.Data;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using YamlDotNet.Serialization;
+using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Queries;
 using MealShareDotNet.Core.Tests.Unit.Mocks;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Core.Services;
+using System.Diagnostics;
 
 namespace MealShareDotNet.Core.Tests.Unit.Services;
 
 [TestFixture]
 public class RecipeRepositoryServiceTests
 {
+    private const string _testConnectionString =
+        "Data Source=SqliteRecipeRepoTests;Mode=Memory;Cache=Shared";
+
     private IRecipeRepository _recipeRepository = default!;
     private IRecipeService _recipeService = default!;
 
@@ -25,29 +30,75 @@ public class RecipeRepositoryServiceTests
     [OneTimeSetUp]
     public void SetUpAll()
     {
+        var deserializer = new Deserializer();
+
+        _recipes = deserializer.Deserialize<IEnumerable<Recipe>>(
+                new StreamReader("test-data/tables/Recipes.yaml")
+                );
+
+        _ingredients = deserializer.Deserialize<IEnumerable<Ingredient>>(
+                new StreamReader("test-data/tables/Ingredients.yaml")
+                );
+
+        _tags = deserializer.Deserialize<IEnumerable<Tag>>(
+                new StreamReader("test-data/tables/Tags.yaml")
+                );
+
+        _ris = deserializer.Deserialize<IEnumerable<RecipeIngredient>>(
+                new StreamReader("test-data/tables/RecipeIngredient.yaml")
+                );
+
+        _rts = deserializer.Deserialize<IEnumerable<RecipeTag>>(
+                new StreamReader("test-data/tables/RecipeTag.yaml")
+                );
+
         _recipeRepository = new MockRecipeRepository();
         _recipeService = new RepositoryRecipeService(_recipeRepository);
+    }
+
+    [OneTimeTearDown]
+    public void TearDownAll()
+    {
     }
 
     [TestCase(0)]
     [TestCase(1)]
     public async Task GetRecipe_ValidId_FullRecipe(long id)
     {
-        var recipe = await _recipeRepository.GetRecipeByIdAsync(id);
+        var entity = await _recipeRepository.GetRecipeByIdAsync(id);
 
-        var entity = await _recipeService.GetRecipeAsync(id);
+        var recipe = await _recipeService.GetRecipeAsync(id);
 
-        Assert.That(entity?.Name, Is.EqualTo(recipe?.Name));
+        Assert.That(recipe?.Name, Is.EqualTo(entity?.Name));
+    }
+
+    [Test]
+    public async Task GetRandomDailyRecipe_NoParameters_FullRecipe()
+    {
+        var recipe = await _recipeService.GetRandomDailyRecipeAsync();
+
+        // Should get the same recipe on the same day
+        Assert.That(recipe, Is.Not.Null);
+        Assert.That((await _recipeService.GetRandomDailyRecipeAsync())?.Name, Is.EqualTo(recipe?.Name));
     }
 
     [Test]
     public async Task InsertRecipe_ValidRecipe_AddedToService()
     {
-        var entity = new Recipe()
+        var recipe = new RecipeDTO()
         {
             Name = "TestInsertion",
             Instructions = "TestInstructions",
+            Tags = [
+                new() { Id = null, Name = "TestTag1"},
+                new() { Id = 1 }
+            ]
         };
-        // TODO: tests are a later problem i guess
+
+        var id = (await _recipeService.InsertRecipeAsync(recipe)).Id;
+        var inserted = await _recipeService.GetRecipeAsync(id ?? -1);
+
+        Assert.That(inserted?.Name, Is.EqualTo(recipe?.Name));
+        Assert.That(inserted?.Tags.Count, Is.EqualTo(recipe?.Tags.Count));
     }
 }

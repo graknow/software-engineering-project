@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace MealShareDotNet.Core.Data.Queries;
 
-public sealed class GetTagListingsQuery
+[ExcludeFromCodeCoverage]
+public class GetTagListingsQuery
 {
     public string? Name { get; set; }
 

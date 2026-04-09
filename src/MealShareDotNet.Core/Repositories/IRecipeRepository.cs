@@ -7,6 +7,7 @@ public interface IRecipeRepository
 {
     Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query);
     Task<bool> RecipeExistsAsync(long id);
+    Task<long> GetRecipeCount();
     Task<Recipe?> GetRecipeByIdAsync(long id);
     Task<Recipe> InsertRecipeAsync(Recipe recipe);
     Task DeleteRecipeAsync(long id);

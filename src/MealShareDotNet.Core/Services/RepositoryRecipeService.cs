@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Data.Queries;
@@ -31,6 +32,28 @@ public class RepositoryRecipeService : IRecipeService
         }
 
         return RecipeDTO.FromEntity(result);
+    }
+
+    public async Task<RecipeDTO?> GetRandomDailyRecipeAsync()
+    {
+        var count = await _db.GetRecipeCount();
+
+        var rand = new Random(DateTime.Now.ToString("ddMMyyyy").GetHashCode());
+
+        var randomOffset = rand.NextInt64(count);
+
+        var results = await _db.SearchRecipesAsync(new()
+        {
+            PageSize = 1,
+            PageOffset = randomOffset
+        });
+
+        if (results.Any())
+        {
+            return RecipeDTO.FromEntity(results.First());
+        }
+
+        return null;
     }
 
     public async Task<RecipeDTO> InsertRecipeAsync(RecipeDTO recipe)
