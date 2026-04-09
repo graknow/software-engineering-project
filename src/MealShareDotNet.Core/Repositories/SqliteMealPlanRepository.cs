@@ -29,24 +29,39 @@ public class SqliteMealPlanRepository :
         return conn.ExecuteAsync(sql, new { Id = id });
     }
 
-    public Task<MealPlan?> GetMealPlanByIdAsync(long id)
+    public async Task<MealPlan?> GetMealPlanByIdAsync(long id)
     {
         var sql = """
             SELECT
                 MP.Id,
                 MP.RecipeId,
                 MP.EventName,
-                MP.ScheduledTime
+                MP.ScheduledTime,
+                Recipe.Id AS RecipeId,
+                Recipe.Name,
+                Recipe.Instructions
             FROM MealPlans MP
-            WHERE MP.Id = @Id
+            INNER JOIN Recipes as Recipe ON Recipe.Id = MP.RecipeId
+            WHERE MP.Id = @Id;
             """;
 
         using var conn = _connection;
 
-        return conn.QuerySingleOrDefaultAsync<MealPlan>(sql, new { Id = id });
+        var results = await conn.QueryAsync<MealPlan, Recipe, MealPlan>(sql, (p, r) =>
+        {
+            p.Recipe = r;
+            return p;
+        },
+        new
+        {
+            Id = id
+        },
+        splitOn: "RecipeId");
+
+        return results.Single();
     }
 
-    public Task<MealPlan> InsertMealPlanAsync(MealPlan meal)
+    public async Task<MealPlan> InsertMealPlanAsync(MealPlan meal)
     {
         var sql = """
             INSERT INTO MealPlans
@@ -58,7 +73,9 @@ public class SqliteMealPlanRepository :
 
         using var conn = _connection;
 
-        return conn.QuerySingleAsync<MealPlan>(sql, meal);
+        var entity =await conn.QuerySingleAsync<MealPlan>(sql, meal);
+
+        return await GetMealPlanByIdAsync(entity.Id ?? -1) ?? throw new Exception("Entity insertion failed");
     }
 
     public Task<IEnumerable<MealPlan>> SearchMealPlansAsync(GetMealPlansQuery query)

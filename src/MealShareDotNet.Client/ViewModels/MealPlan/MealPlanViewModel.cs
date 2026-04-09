@@ -20,64 +20,54 @@ public partial class MealPlanViewModel : ViewModelBase
     private readonly IMealPlanService _mealPlans;
     private readonly IRecipeService _recipes;
 
-    public partial class DailyMealPlanVM : ViewModelBase
-    {
-        [ObservableProperty]
-        private bool _selected;
-
-        [ObservableProperty]
-        private DateOnly _date;
-
-        [ObservableProperty]
-        private ObservableCollection<MealPlanVM> _plans = [];
-    }
-
-    public partial class MealPlanVM : ViewModelBase
-    {
-        [ObservableProperty]
-        private string _recipeName = string.Empty;
-
-        [ObservableProperty]
-        private TimeOnly? _scheduledTime;
-    }
-
     [ObservableProperty]
     private ObservableCollection<DailyMealPlanVM> _dailyMealPlans = [];
 
     [ObservableProperty]
-    private DateTimeOffset _selectedDateTime = DateTime.Now;
-
-    private DateOnly _selectedDate => DateOnly.FromDateTime(SelectedDateTime.DateTime);
+    private DateTimeOffset _filterDate = DateTimeOffset.Now;
+    private DateOnly _filterDateOnly => DateOnly.FromDateTime(FilterDate.Date);
 
     [ObservableProperty]
+    private bool _focusFilterDate = false;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddMealPlanCommand))]
     private DateTimeOffset? _newMealPlanDate;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddMealPlanCommand))]
     private TimeSpan? _newMealPlanTime;
 
     [ObservableProperty]
-    private MealPlanDTO _newMealPlan = new();
+    [NotifyCanExecuteChangedFor(nameof(AddMealPlanCommand))]
+    private RecipeDropdownVM? _newMealPlanRecipe;
 
     [ObservableProperty]
-    private ObservableCollection<RecipeListingDTO> _recipeOptions = [];
+    [NotifyCanExecuteChangedFor(nameof(AddMealPlanCommand))]
+    private string _newMealPlanEventName = string.Empty;
 
     [ObservableProperty]
-    private bool _focusSelectedDate = false;
+    private ObservableCollection<RecipeDropdownVM> _recipeOptions = [];
+
 
     public MealPlanViewModel(IMealPlanService mealPlans, IRecipeService recipes)
     {
         _mealPlans = mealPlans;
         _recipes = recipes;
 
-        Task.Run(async () => RecipeOptions = new ObservableCollection<RecipeListingDTO>(
-            await _recipes.GetRecipeListingsAsync(new()))
+        Task.Run(async () => RecipeOptions = new ObservableCollection<RecipeDropdownVM>(
+            (await _recipes.GetRecipeListingsAsync(new())).Select(r => new RecipeDropdownVM()
+            {
+                Id = r.Id,
+                Name = r.Name,
+            }))
             ).Wait();
         GenerateWeekView();
     }
 
     private async void GenerateWeekView()
     {
-        var viewStartDate = FocusSelectedDate ? _selectedDate.AddDays(-3) : _selectedDate.StartOfWeek(DayOfWeek.Sunday);
+        var viewStartDate = FocusFilterDate ? _filterDateOnly.AddDays(-3) : _filterDateOnly.StartOfWeek(DayOfWeek.Sunday);
 
         var plans = await _mealPlans.GetWeekMealPlansAsync(viewStartDate);
 
@@ -89,47 +79,63 @@ public partial class MealPlanViewModel : ViewModelBase
 
             var datePlans = plans
                 .Where(p => DateOnly.FromDateTime(p.ScheduledTime) == date)
-                .Select(p => new MealPlanVM()
+                .Select(p => new MealEventVM()
                 {
                     RecipeName = p.Recipe.Name,
                     ScheduledTime = TimeOnly.FromDateTime(p.ScheduledTime)
                 });
             
-            var isCurrentDay = date.CompareTo(_selectedDate) == 0;
+            var isCurrentDay = date.CompareTo(_filterDateOnly) == 0;
 
             DailyMealPlans.Add(new()
             {
                 Date = date,
-                Plans = new ObservableCollection<MealPlanVM>(datePlans),
+                Plans = new ObservableCollection<MealEventVM>(datePlans),
                 Selected = isCurrentDay
             });
         }        
     }
 
-    partial void OnFocusSelectedDateChanged(bool value)
+    partial void OnFocusFilterDateChanged(bool value)
     {
         GenerateWeekView();
     }
 
-    partial void OnSelectedDateTimeChanged(DateTimeOffset value)
+    partial void OnFilterDateChanged(DateTimeOffset value)
     {
         GenerateWeekView();
     }
 
     [RelayCommand(CanExecute = nameof(CanAddMealPlan))]
-    private void AddMealPlan()
+    private async Task AddMealPlan()
     {
-        throw new Exception(_newMealPlan.Recipe.Name);
+        var date = DateOnly.FromDateTime(NewMealPlanDate?.Date ?? throw new Exception());
+        var time = TimeOnly.FromTimeSpan(NewMealPlanTime ?? throw new Exception());
+
+        var dto = new MealPlanDTO()
+        {
+            EventName = NewMealPlanEventName,
+            ScheduledTime = new DateTime(date, time),
+            Recipe = new RecipeDTO()
+            {
+                Id = NewMealPlanRecipe!.Id,
+                Name = NewMealPlanRecipe!.Name
+            }
+        };
+
+        await _mealPlans.InsertMealPlanAsync(dto);
+
+        GenerateWeekView();
     }
 
     private bool CanAddMealPlan()
     {
-        if (NewMealPlan is null)
+        if (NewMealPlanRecipe is null)
         {
             return false;
         }
 
-        if (String.IsNullOrWhiteSpace(NewMealPlan.EventName))
+        if (string.IsNullOrWhiteSpace(NewMealPlanEventName))
         {
             return false;
         }
@@ -145,5 +151,34 @@ public partial class MealPlanViewModel : ViewModelBase
         }
 
         return true;
+    }
+    public partial class DailyMealPlanVM : ViewModelBase
+    {
+        [ObservableProperty]
+        private bool _selected;
+
+        [ObservableProperty]
+        private DateOnly _date;
+
+        [ObservableProperty]
+        private ObservableCollection<MealEventVM> _plans = [];
+    }
+
+    public partial class MealEventVM : ViewModelBase
+    {
+        [ObservableProperty]
+        private string _recipeName = string.Empty;
+
+        [ObservableProperty]
+        private TimeOnly? _scheduledTime;
+    }
+
+    public partial class RecipeDropdownVM : ViewModelBase
+    {
+        [ObservableProperty]
+        private long? _id;
+
+        [ObservableProperty]
+        private string _name = string.Empty;
     }
 }

@@ -28,7 +28,7 @@ public class MealPlanDTO
 {
     public long? Id { get; set; }
 
-    public Recipe Recipe { get; set; } = default!;
+    public RecipeDTO Recipe { get; set; } = default!;
     public string? EventName { get; set; }
     public DateTime ScheduledTime { get; set; }
 
@@ -37,7 +37,7 @@ public class MealPlanDTO
         return new()
         {
             Id = meal.Id,
-            Recipe = meal.Recipe ?? throw new ArgumentNullException("Recipe must not be null for MealPlanDTO."),
+            Recipe = RecipeDTO.FromEntity(meal.Recipe ?? throw new ArgumentNullException("Recipe must not be null for MealPlanDTO.")),
             EventName = meal.EventName,
             ScheduledTime = meal.ScheduledTime
         };
