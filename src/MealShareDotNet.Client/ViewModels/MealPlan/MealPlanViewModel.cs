@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MealShareDotNet.Client.Extensions;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
@@ -49,16 +50,16 @@ public partial class MealPlanViewModel : ViewModelBase
     private DateOnly _selectedDate => DateOnly.FromDateTime(SelectedDateTime.DateTime);
 
     [ObservableProperty]
-    private DateTimeOffset? _addMealPlanDate;
+    private DateTimeOffset? _newMealPlanDate;
 
     [ObservableProperty]
-    private TimeSpan? _addMealPlanTime;
+    private TimeSpan? _newMealPlanTime;
 
     [ObservableProperty]
-    private MealPlanDTO _addMealPlan;
+    private MealPlanDTO _newMealPlan = new();
 
     [ObservableProperty]
-    private ObservableCollection<string> _recipeOptions = [];
+    private ObservableCollection<RecipeListingDTO> _recipeOptions = [];
 
     [ObservableProperty]
     private bool _focusSelectedDate = false;
@@ -68,8 +69,8 @@ public partial class MealPlanViewModel : ViewModelBase
         _mealPlans = mealPlans;
         _recipes = recipes;
 
-        Task.Run(async () => RecipeOptions = new ObservableCollection<string>(
-            (await _recipes.GetRecipeListingsAsync(new())).Select(r => r.Name))
+        Task.Run(async () => RecipeOptions = new ObservableCollection<RecipeListingDTO>(
+            await _recipes.GetRecipeListingsAsync(new()))
             ).Wait();
         GenerateWeekView();
     }
@@ -113,5 +114,36 @@ public partial class MealPlanViewModel : ViewModelBase
     partial void OnSelectedDateTimeChanged(DateTimeOffset value)
     {
         GenerateWeekView();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAddMealPlan))]
+    private void AddMealPlan()
+    {
+        throw new Exception(_newMealPlan.Recipe.Name);
+    }
+
+    private bool CanAddMealPlan()
+    {
+        if (NewMealPlan is null)
+        {
+            return false;
+        }
+
+        if (String.IsNullOrWhiteSpace(NewMealPlan.EventName))
+        {
+            return false;
+        }
+
+        if (NewMealPlanDate is null)
+        {
+            return false;
+        }
+
+        if (NewMealPlanTime is null)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

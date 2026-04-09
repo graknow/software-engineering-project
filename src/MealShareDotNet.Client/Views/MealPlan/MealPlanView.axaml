@@ -24,11 +24,10 @@
       </Grid.ColumnDefinitions>
       <DatePicker SelectedDate="{Binding SelectedDateTime}" Grid.Column="0" />
       <CheckBox IsChecked="{Binding FocusSelectedDate}" Content="Focus date" Grid.Column="1" />
-      <Button>Add</Button>
+      <Button Content="Add" Grid.Column="3" Command="{Binding AddMealPlanCommand}"></Button>
       <StackPanel Orientation="Vertical" Grid.Column="4">
-        <TextBox Text="{Binding AddMealPlan.EventName}" />
-        <ComboBox SelectedItem="{Binding AddMealPlan.Recipe}"
-                  ItemsSource="{Binding RecipeOptions}" >
+        <TextBox Text="{Binding NewMealPlan.EventName}" />
+        <ComboBox SelectedItem="{Binding NewMealPlan.Recipe}" ItemsSource="{Binding RecipeOptions}" IsEditable="False">
           <ComboBox.ItemTemplate>
             <DataTemplate>
               <TextBlock Text="{Binding Name}" />
@@ -37,8 +36,8 @@
         </ComboBox>
       </StackPanel>
       <StackPanel Orientation="Vertical" Grid.Column="5">
-        <DatePicker SelectedDate="{Binding AddMealPlanDate}"/>
-        <TimePicker SelectedTime="{Binding AddMealPlanTime}" ClockIdentifier="12HourClock" MinuteIncrement="15"/>
+        <DatePicker SelectedDate="{Binding NewMealPlanDate}"/>
+        <TimePicker SelectedTime="{Binding NewMealPlanTime}" ClockIdentifier="12HourClock" MinuteIncrement="15"/>
       </StackPanel>
     </Grid>
     <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Row="2">
