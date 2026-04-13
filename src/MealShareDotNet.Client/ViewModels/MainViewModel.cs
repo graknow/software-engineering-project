@@ -39,13 +39,14 @@ public partial class MainViewModel : ViewModelBase
         collection.AddTransient<HomeViewModel>();
         collection.AddTransient<MealPlanViewModel>();
         collection.AddTransient<RecipeViewModel>();
+        collection.AddTransient<RecipeAddViewModel>();
 
         _provider = collection.BuildServiceProvider();
 
         _menuItems = new ObservableCollection<MenuItem>([
             new MenuItem("Home", () => _provider.GetRequiredService<HomeViewModel>()),
             new MenuItem("Recipes", () => {
-                var view = _provider.GetRequiredService<RecipeViewModel>();
+                var view = _provider.GetRequiredService<RecipeAddViewModel>();
                 _ = view.LoadRecipeAsync(1);
                 return view;
             }),
