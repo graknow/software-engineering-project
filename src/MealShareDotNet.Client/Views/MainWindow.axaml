@@ -8,5 +8,11 @@
         x:Class="MealShareDotNet.Client.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="MealShareDotNet.Client">
-        <views:MainView />
+    <Window.Styles>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </Window.Styles>
+    <views:MainView />
 </Window>

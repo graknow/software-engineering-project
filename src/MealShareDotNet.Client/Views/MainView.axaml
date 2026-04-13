@@ -13,7 +13,7 @@
 
   </Design.DataContext>
   <DockPanel>
-    <Border Background="LightGreen" DockPanel.Dock="Left">
+    <Border Background="LightGreen" DockPanel.Dock="Left" Margin="0 0 10 0">
         <ListBox ItemsSource="{Binding MenuItems}"
                  SelectedItem="{Binding SelectedMenuItem}"
                  Background="Transparent">
@@ -27,6 +27,8 @@
             </ListBox.ItemTemplate>
         </ListBox>
     </Border>
-    <ContentControl Content="{Binding CurrentPage}"/>
+    <ScrollViewer>
+        <ContentControl Content="{Binding CurrentPage}"/>
+    </ScrollViewer>
   </DockPanel>
 </UserControl>

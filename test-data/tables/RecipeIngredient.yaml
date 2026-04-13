@@ -162,9 +162,6 @@
   IngredientId: 35
   Mass: 625
 - RecipeId: 7
-  IngredientId: 32
-  Mass: 1272
-- RecipeId: 7
   IngredientId: 6
   Volume: 533
 - RecipeId: 8
