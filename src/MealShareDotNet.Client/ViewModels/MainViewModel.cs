@@ -9,10 +9,13 @@ using MealShareDotNet.Core.Services;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Client.ViewModels.MealPlan;
 using MealShareDotNet.Client.ViewModels.Recipes;
+using Avalonia.Controls.Notifications;
+using MealShareDotNet.Client.Services;
+using Avalonia.Controls;
 
 namespace MealShareDotNet.Client.ViewModels;
 
-public record MenuItem(string Title, Func<ObservableObject> CreatePage);
+public record MenuItem(string Title, Func<ViewModelBase> CreatePage);
 
 public partial class MainViewModel : ViewModelBase
 {
@@ -23,7 +26,7 @@ public partial class MainViewModel : ViewModelBase
     private MenuItem? _selectedMenuItem;
 
     [ObservableProperty]
-    private ObservableObject? _currentPage;
+    private ViewModelBase? _currentPage;
 
     private ServiceProvider _provider;
 
@@ -56,6 +59,12 @@ public partial class MainViewModel : ViewModelBase
         var page = initialPage ?? MenuItems.First();
         _selectedMenuItem = page;
         _currentPage = page.CreatePage();
+        _currentPage.PageChangeEventHandler += OnPageChange;
+    }
+
+    public void OnPageChange(object? sender, PageChangeEventArgs args)
+    {
+
     }
 
     partial void OnSelectedMenuItemChanged(MenuItem? value)

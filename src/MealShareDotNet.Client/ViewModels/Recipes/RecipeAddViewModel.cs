@@ -13,21 +13,25 @@ using Avalonia.Controls.Notifications;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.ObjectModel;
+using Avalonia.Controls;
+using MealShareDotNet.Client.Services;
 
 namespace MealShareDotNet.Client.ViewModels.Recipes;
 
 public partial class RecipeAddViewModel : ViewModelBase
 {
     private readonly IRecipeService _recipeService;
+    private readonly INotificationService _notifications;
     
     [ObservableProperty]
     private VM _recipe = new();
 
     private RecipeDTO _dto = new();
 
-    public RecipeAddViewModel(IRecipeService recipeService)
+    public RecipeAddViewModel(IRecipeService recipeService, INotificationService notificationService)
     {
         _recipeService = recipeService;
+        _notifications = notificationService;
     }
 
     public async Task LoadRecipeAsync(long id)
@@ -129,12 +133,25 @@ public partial class RecipeAddViewModel : ViewModelBase
     public void AddTag()
     {
         Recipe.Tags.Add(new());
+        _notifications.ShowInfo("test", "message");
     }
 
     [RelayCommand]
     public void AddIngredient()
     {
         Recipe.Ingredients.Add(new());
+    }
+
+    [RelayCommand]
+    public void RemoveTag(TagVM vm)
+    {
+        Recipe.Tags.Remove(vm);
+    }
+
+    [RelayCommand]
+    public void RemoveIngredient(IngredientVM vm)
+    {
+        Recipe.Ingredients.Remove(vm);
     }
 
     public partial class VM : ViewModelBase

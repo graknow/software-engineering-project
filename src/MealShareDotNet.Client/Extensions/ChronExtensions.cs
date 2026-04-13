@@ -10,3 +10,12 @@ public static class DateOnlyExtensions
         return d.AddDays(-1 * diff);
     }
 }
+
+public static class DateTimeOffsetExtensions
+{
+    public static DateTimeOffset StartOfWeek(this DateTimeOffset d, DayOfWeek startOfWeek)
+    {
+        int diff = (7 + (d.DayOfWeek - startOfWeek)) % 7;
+        return d.AddDays(-1 * diff);
+    }
+}

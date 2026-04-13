@@ -17,20 +17,24 @@
         <TextBlock Margin="0 5" Text="Price (Dollars):" />
         <TextBox Text="{Binding Recipe.Price}" />
         <TextBlock Margin="0 15 0 5" Text="Instructions:" />
-        <TextBox MinHeight="200" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Recipe.Instructions}" />
+        <TextBox MinHeight="200" AcceptsReturn="True" TextWrapping="WrapWithOverflow" Text="{Binding Recipe.Instructions}" />
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Vertical" Grid.Column="0">
-                <TextBlock Text="Ingredients:" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Ingredients:" />
+                    <Button Command="{Binding AddIngredient}" Content="+" HorizontalAlignment="Right" />
+                </StackPanel>
                 <ScrollViewer Height="500">
                     <ItemsControl ItemsSource="{Binding Recipe.Ingredients}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="2*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
@@ -39,14 +43,19 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="0" />
+                                    <Button Content="x" Background="Transparent"
+                                            Command="{Binding $parent[ItemsControl].((vm:RecipeAddViewModel)DataContext).RemoveIngredient}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            Grid.Row="1"
+                                            Grid.Column="0"/>
+                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="1" />
                                     <TextBox Text="{Binding Name}"
                                              IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
                                              Grid.Row="1"
-                                             Grid.Column="0" />
-                                    <TextBlock Text="Amount" Margin="0 5" Grid.Row="0" Grid.Column="1" />
-                                    <TextBox Text="{Binding Value}" Grid.Row="1" Grid.Column="1" />
-                                    <TextBlock Text="Unit" Grid.Row="0" Grid.Column="2" />
+                                             Grid.Column="1" />
+                                    <TextBlock Text="Amount" Margin="0 5" Grid.Row="0" Grid.Column="2" />
+                                    <TextBox Text="{Binding Value}" Grid.Row="1" Grid.Column="2" />
+                                    <TextBlock Text="Unit" Grid.Row="0" Grid.Column="3" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -64,6 +73,7 @@
                             <DataTemplate>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" /> 
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="2*" />
                                     </Grid.ColumnDefinitions>
@@ -71,16 +81,21 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="0" />
+                                    <Button Content="x" Background="Transparent"
+                                            Command="{Binding $parent[ItemsControl].((vm:RecipeAddViewModel)DataContext).RemoveTag}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            Grid.Row="1"
+                                            Grid.Column="0"/>
+                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="1" />
                                     <TextBox Text="{Binding Name}"
                                              IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
                                              Grid.Row="1"
-                                             Grid.Column="0" />
-                                    <TextBlock Text="Description" Margin="0 5" Grid.Row="0" Grid.Column="1" />
+                                             Grid.Column="1" />
+                                    <TextBlock Text="Description" Margin="0 5" Grid.Row="0" Grid.Column="2" />
                                     <TextBox Text="{Binding Description}"
                                              IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
                                              Grid.Row="1"
-                                             Grid.Column="1" />
+                                             Grid.Column="2" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -88,7 +103,7 @@
                 </ScrollViewer>
             </StackPanel>
         </Grid>
-        <Grid>
+        <Grid Height="100">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
