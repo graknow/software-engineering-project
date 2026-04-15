@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MealShareDotNet.Client.ViewModels.RecipeListing"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MealShareDotNet.Client.Views.RecipeListing.RecipeListingView"
+             x:DataType="vm:RecipeListingViewModel">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <TextBlock FontSize="18" Grid.Row="0" Margin="10">Recipes</TextBlock>
+
+    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
+      <TextBlock Text="Loading recipes..." FontSize="16" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" IsVisible="{Binding IsNotLoading}">
+      <ItemsControl ItemsSource="{Binding Recipes}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="White"
+                    BorderThickness="1"
+                    BorderBrush="LightGray"
+                    CornerRadius="4"
+                    Margin="10"
+                    Padding="15"
+                    MaxWidth="300"
+                    MinHeight="250">
+              <StackPanel Orientation="Vertical" Spacing="12">
+                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" Foreground="Black" />
+
+                <Border Height="1" Background="LightGray" />
+
+                <StackPanel Orientation="Vertical" Spacing="8">
+                  <StackPanel Orientation="Vertical" Spacing="2">
+                    <TextBlock FontSize="11" Foreground="Gray" FontWeight="Bold">Cook Time</TextBlock>
+                    <TextBlock Text="{Binding CookTime}" FontSize="13" Foreground="Black" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Vertical" Spacing="2">
+                    <TextBlock FontSize="11" Foreground="Gray" FontWeight="Bold">Servings</TextBlock>
+                    <TextBlock Text="{Binding ServingQuantity}" FontSize="13" Foreground="Black" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Vertical" Spacing="2">
+                    <TextBlock FontSize="11" Foreground="Gray" FontWeight="Bold">Updated</TextBlock>
+                    <TextBlock Text="{Binding UpdatedDate}" FontSize="13" Foreground="Black" />
+                  </StackPanel>
+                </StackPanel>
+
+                <Border Height="1" Background="LightGray" />
+
+                <StackPanel Orientation="Vertical" Spacing="4">
+                  <TextBlock FontSize="11" Foreground="Gray" FontWeight="Bold">Tags</TextBlock>
+                  <ItemsControl ItemsSource="{Binding Tags}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#E8E8E8" CornerRadius="12" Padding="6,2" Margin="2">
+                          <TextBlock Text="{Binding Name}" FontSize="11" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Show when finished loading but no items were found -->
+    <TextBlock Grid.Row="1"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontSize="14"
+               Foreground="Gray"
+               IsVisible="{Binding ShowEmpty}"
+               Text="No recipes found." />
+  </Grid>
+</UserControl>

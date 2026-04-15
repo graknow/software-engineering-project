@@ -12,6 +12,7 @@ using MealShareDotNet.Client.ViewModels.Recipes;
 using Avalonia.Controls.Notifications;
 using MealShareDotNet.Client.Services;
 using Avalonia.Controls;
+using MealShareDotNet.Client.ViewModels.RecipeListing;
 
 namespace MealShareDotNet.Client.ViewModels;
 
@@ -44,12 +45,13 @@ public partial class MainViewModel : ViewModelBase
         collection.AddTransient<MealPlanViewModel>();
         collection.AddTransient<RecipeViewModel>();
         collection.AddTransient<RecipeAddViewModel>();
+        collection.AddTransient<RecipeListingViewModel>();
 
         _provider = collection.BuildServiceProvider();
 
         _menuItems = new ObservableCollection<MenuItem>([
             new MenuItem("Home", () => _provider.GetRequiredService<HomeViewModel>()),
-            new MenuItem("Recipes", () => _provider.GetRequiredService<RecipeViewModel>()),
+            new MenuItem("Recipes", () => _provider.GetRequiredService<RecipeListingViewModel>()),
             new MenuItem("Meal Plan", () => _provider.GetRequiredService<MealPlanViewModel>()),
         ]);
 
