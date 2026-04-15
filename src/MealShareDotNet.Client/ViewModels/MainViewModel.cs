@@ -8,6 +8,7 @@ using Microsoft.VisualBasic;
 using MealShareDotNet.Core.Services;
 using MealShareDotNet.Core.Repositories;
 using MealShareDotNet.Client.ViewModels.MealPlan;
+using MealShareDotNet.Client.ViewModels.RecipeListing;
 
 namespace MealShareDotNet.Client.ViewModels;
 
@@ -37,12 +38,14 @@ public partial class MainViewModel : ViewModelBase
         // Provide pages for automated dependency injection
         collection.AddTransient<HomeViewModel>();
         collection.AddTransient<MealPlanViewModel>();
+        collection.AddTransient<RecipeListingViewModel>();
 
         _provider = collection.BuildServiceProvider();
 
         _menuItems = new ObservableCollection<MenuItem>([
             new MenuItem("Home", () => _provider.GetRequiredService<HomeViewModel>()),
             new MenuItem("Meal Plan", () => _provider.GetRequiredService<MealPlanViewModel>()),
+            new MenuItem("Recipe Listing", () => _provider.GetRequiredService<RecipeListingViewModel>()),
         ]);
 
         var page = initialPage ?? MenuItems.First();
