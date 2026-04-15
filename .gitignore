@@ -406,3 +406,6 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+/.vs/MealShareDotNet.slnx/copilot-chat/4ee6790e/sessions
+/.vs/CopilotSnapshots/D2179847D94AD24D91430FC0EB1598D7
+/.vs
