@@ -13,6 +13,7 @@ using Avalonia.Controls.Notifications;
 using MealShareDotNet.Client.Services;
 using Avalonia.Controls;
 using MealShareDotNet.Client.ViewModels.RecipeListing;
+using Avalonia.Media;
 
 namespace MealShareDotNet.Client.ViewModels;
 
@@ -64,7 +65,8 @@ public partial class MainViewModel : ViewModelBase
     public void OnPageChange(object? sender, PageChangeEventArgs args)
     {
         CurrentPage.PageChangeEventHandler -= OnPageChange;
-        CurrentPage = args.NextPage;
+        CurrentPage = _provider.GetRequiredService(args.NextViewType) as ViewModelBase;
+        args.NextPageConfig(CurrentPage);
         CurrentPage.PageChangeEventHandler += OnPageChange;
     }
 

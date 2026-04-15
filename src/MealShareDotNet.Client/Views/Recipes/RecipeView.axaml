@@ -61,6 +61,7 @@
         <TextBlock Padding="0 10 0 0"
                    TextWrapping="Wrap"
                    Text="{Binding Recipe.Instructions}" />
+        <Button HorizontalAlignment="Right" Command="{Binding LoadUpdateView}" Content="Edit" />
         
     </StackPanel>
 </UserControl>

@@ -122,6 +122,19 @@ public partial class RecipeAddViewModel : ViewModelBase
         {
             result = await _recipeService.UpdateRecipeAsync(_dto);
         }
+
+        var args = new PageChangeEventArgs()
+        {
+            NextViewType = typeof(RecipeViewModel),
+            NextPageConfig = (view) =>
+            {
+                var viewVM = view as RecipeViewModel;
+                _ = viewVM.LoadRecipeAsync(_dto.Id ?? -1);
+                return viewVM;   
+            }
+        };
+
+        EmitPageChange(args);
     }
 
     public bool IsRecipeValid()

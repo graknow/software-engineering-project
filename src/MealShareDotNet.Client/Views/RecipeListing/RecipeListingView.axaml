@@ -12,7 +12,10 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <TextBlock FontSize="18" Grid.Row="0" Margin="10">Recipes</TextBlock>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock FontSize="18" Grid.Row="0" Margin="10">Recipes</TextBlock>
+      <Button Content="Add" Command="{Binding LoadAddRecipeViewAsync}" />
+    </StackPanel>
 
     <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
       <TextBlock Text="Loading recipes..." FontSize="16" HorizontalAlignment="Center" />
@@ -78,6 +81,7 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
                 </StackPanel>
+                <Button Command="{Binding $parent[UserControl].((vm:RecipeListingViewModel)DataContext).LoadRecipeViewAsync}" CommandParameter="{Binding $self.DataContext}">View</Button>
               </StackPanel>
             </Border>
           </DataTemplate>

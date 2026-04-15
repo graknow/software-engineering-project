@@ -15,6 +15,8 @@ using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Services;
 using MealShareDotNet.Core.Data.Queries;
+using MealShareDotNet.Client.ViewModels.Recipes;
+using System.Reflection;
 
 namespace MealShareDotNet.Client.ViewModels.RecipeListing;
 
@@ -108,5 +110,37 @@ public partial class RecipeListingViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    public async Task LoadRecipeViewAsync(RecipeListingDTO recipe)
+    {
+        var args = new PageChangeEventArgs()
+        {
+            NextViewType = typeof(RecipeViewModel),
+            NextPageConfig = (viewModel) =>
+            {
+                var recipeVM = viewModel as RecipeViewModel;
+                _ = recipeVM?.LoadRecipeAsync(recipe.Id ?? -1);
+                return recipeVM!;
+            }
+        };
+
+        EmitPageChange(args);
+    }
+
+    [RelayCommand]
+    public async Task LoadAddRecipeViewAsync()
+    {
+        var args = new PageChangeEventArgs()
+        {
+            NextViewType = typeof(RecipeAddViewModel),
+            NextPageConfig = (viewModel) =>
+            {
+                return viewModel;
+            }
+        };
+
+        EmitPageChange(args);
     }
 }

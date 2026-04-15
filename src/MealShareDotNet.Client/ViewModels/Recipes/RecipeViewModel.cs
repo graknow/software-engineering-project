@@ -12,6 +12,7 @@ using MealShareDotNet.Client.Converters;
 using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MealShareDotNet.Client.ViewModels.Recipes;
 
@@ -77,6 +78,23 @@ public partial class RecipeViewModel : ViewModelBase
             Name = t.Name,
             Description = t.Description
         }).ToList();
+    }
+
+    [RelayCommand]
+    public void LoadUpdateView()
+    {
+        var args = new PageChangeEventArgs()
+        {
+            NextViewType = typeof(RecipeAddViewModel),
+            NextPageConfig = (viewModel) =>
+            {
+                var addViewModel = viewModel as RecipeAddViewModel;
+                _ = addViewModel.LoadRecipeAsync(_recipe.Id);
+                return addViewModel;
+            }
+        };
+
+        EmitPageChange(args);
     }
 
     public partial class VM : ViewModelBase
