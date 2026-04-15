@@ -16,6 +16,20 @@
         <TextBox Text="{Binding Recipe.ServingQuantity}" />
         <TextBlock Margin="0 5" Text="Price (Dollars):" />
         <TextBox Text="{Binding Recipe.Price}" />
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <TextBlock Margin="0 5" Text="Scraper" />
+                <TextBox Margin="0 0" HorizontalAlignment="Stretch" Text="{Binding Recipe.Name}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Margin="0 5" Text="Filter" />
+                <TextBox Margin="5 0" HorizontalAlignment="Stretch" Text="{Binding Recipe.Name}" />
+            </StackPanel>
+        </Grid>
         <TextBlock Margin="0 15 0 5" Text="Instructions:" />
         <TextBox MinHeight="200" AcceptsReturn="True" TextWrapping="WrapWithOverflow" Text="{Binding Recipe.Instructions}" />
         <Grid>
