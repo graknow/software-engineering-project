@@ -8,7 +8,7 @@ public abstract class ViewModelBase : ObservableObject
 {
     public class PageChangeEventArgs : EventArgs
     {
-        public ObservableObject NextPage { get; set; } = default!;
+        public ViewModelBase NextPage { get; set; } = default!;
     }
 
     public event EventHandler<PageChangeEventArgs>? PageChangeEventHandler = default!;

@@ -8,6 +8,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MealShareDotNet.Core.Data.DTOs;
 using MealShareDotNet.Core.Data.Entities;
 using MealShareDotNet.Core.Services;
+using MealShareDotNet.Client.Converters;
+using System.Runtime.CompilerServices;
+using System.Globalization;
+using System.Collections.ObjectModel;
 
 namespace MealShareDotNet.Client.ViewModels.Recipes;
 
@@ -21,6 +25,7 @@ public partial class RecipeViewModel : ViewModelBase
     public RecipeViewModel(IRecipeService recipeService)
     {
         _recipeService = recipeService;
+        _ = LoadRecipeAsync(1);
     }
 
     public async Task LoadRecipeAsync(long id)
@@ -45,20 +50,22 @@ public partial class RecipeViewModel : ViewModelBase
             if (i.Quantity is not null)
             {
                 vm.Value = i.Quantity.ToString()!;
-                vm.Unit = "";
+                vm.Unit = "ct";
                 vm.UnitOptions = [];
             }
             else if (i.Mass is not null)
             {
-                vm.Value = i.Mass.ToString()!;
-                vm.Unit = "massPlaceholder";
-                vm.UnitOptions = []; // TODO: replace with known list of mass units
+                vm.Measure = i.Mass ?? -1;
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Mass ?? throw new Exception(), StandardUnitConverter.UnitType.MASS);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Mass ?? throw new Exception(), vm.Unit);
+                vm.UnitOptions = new ObservableCollection<string>(StandardUnitConverter.Instance.MassConversions.Keys);
             }
             else if (i.Volume is not null)
             {
-                vm.Value = i.Volume.ToString()!;
-                vm.Unit = "volumePlaceholder";
-                vm.UnitOptions = []; // TODO: replace with know list of volume units
+                vm.Measure = i.Volume ?? -1;
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Volume ?? throw new Exception(), StandardUnitConverter.UnitType.VOLUME);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Volume ?? throw new Exception(), vm.Unit);
+                vm.UnitOptions = new ObservableCollection<string>(StandardUnitConverter.Instance.VolumeConversions.Keys);
             }
             
             return vm;
@@ -105,6 +112,8 @@ public partial class RecipeViewModel : ViewModelBase
     {
         public long Id { get; set; }
 
+        public long Measure { get; set; }
+
         [ObservableProperty]
         private string _name = "";
         
@@ -115,7 +124,20 @@ public partial class RecipeViewModel : ViewModelBase
         private string? _unit;
 
         [ObservableProperty]
-        private IEnumerable<string> _unitOptions = [];
+        private ObservableCollection<string> _unitOptions = [];
+
+        // i hate you
+        // also this is named to the opposite but nothing matters
+        public bool IsCount => UnitOptions.Any();
+
+        partial void OnUnitChanged(string? value)
+        {
+            if (IsCount)
+            {
+
+            Value = StandardUnitConverter.Instance.GetUnitMeasurement(Measure, value);
+            }
+        }
     }
 
     public partial class TagVM : ViewModelBase

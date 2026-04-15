@@ -5,7 +5,11 @@
              xmlns:vm="using:MealShareDotNet.Client.ViewModels.Recipes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MealShareDotNet.Client.Views.Recipes.RecipeView"
+             xmlns:con="using:MealShareDotNet.Client.Converters"
              x:DataType="vm:RecipeViewModel">
+    <UserControl.Resources>
+        <con:StandardUnitConverter x:Key="standardUnitConverter" />
+    </UserControl.Resources>
     <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -38,15 +42,18 @@
         <ItemsControl ItemsSource="{Binding Recipe.Ingredients}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock>
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0}: {1} {2}">
-                                <Binding Path="Name" />
-                                <Binding Path="Value" />
-                                <Binding Path="Unit" />
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}: {1}">
+                                    <Binding Path="Name" />
+                                    <Binding Path="Value" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding Unit}" IsVisible="{Binding IsCount}" />
+                        <TextBlock Text="{Binding Unit}" IsVisible="{Binding IsCount, Converter={x:Static BoolConverters.Not}}" />
+                    </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

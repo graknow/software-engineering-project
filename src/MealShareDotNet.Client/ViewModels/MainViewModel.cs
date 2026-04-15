@@ -26,17 +26,18 @@ public partial class MainViewModel : ViewModelBase
     private MenuItem? _selectedMenuItem;
 
     [ObservableProperty]
-    private ViewModelBase? _currentPage;
+    private ViewModelBase _currentPage;
 
-    private ServiceProvider _provider;
+    private readonly ServiceProvider _provider;
 
-    public MainViewModel(string connectionString, MenuItem? initialPage = null)
+    public MainViewModel(string connectionString, IServiceCollection windowServices, MenuItem? initialPage = null)
     {
-        var collection = new ServiceCollection();
+        var collection = windowServices;
         collection.AddTransient<IRecipeRepository>(s => new SqliteRecipeRepository(connectionString));
         collection.AddTransient<IRecipeService, RepositoryRecipeService>();
         collection.AddTransient<IMealPlanRepository>(s => new SqliteMealPlanRepository(connectionString));
         collection.AddTransient<IMealPlanService, RepositoryMealPlanService>();
+        collection.AddSingleton<INotificationService, NotificationService>();
 
         // Provide pages for automated dependency injection
         collection.AddTransient<HomeViewModel>();
@@ -48,11 +49,7 @@ public partial class MainViewModel : ViewModelBase
 
         _menuItems = new ObservableCollection<MenuItem>([
             new MenuItem("Home", () => _provider.GetRequiredService<HomeViewModel>()),
-            new MenuItem("Recipes", () => {
-                var view = _provider.GetRequiredService<RecipeAddViewModel>();
-                _ = view.LoadRecipeAsync(1);
-                return view;
-            }),
+            new MenuItem("Recipes", () => _provider.GetRequiredService<RecipeViewModel>()),
             new MenuItem("Meal Plan", () => _provider.GetRequiredService<MealPlanViewModel>()),
         ]);
 
@@ -64,11 +61,14 @@ public partial class MainViewModel : ViewModelBase
 
     public void OnPageChange(object? sender, PageChangeEventArgs args)
     {
-
+        CurrentPage.PageChangeEventHandler -= OnPageChange;
+        CurrentPage = args.NextPage;
+        CurrentPage.PageChangeEventHandler += OnPageChange;
     }
 
     partial void OnSelectedMenuItemChanged(MenuItem? value)
     {
-        CurrentPage = value?.CreatePage();
+        CurrentPage = value!.CreatePage();
+        CurrentPage.PageChangeEventHandler += OnPageChange;
     }
 }
