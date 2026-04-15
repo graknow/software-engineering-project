@@ -1,7 +1,27 @@
 namespace MealShareDotNet.Core.Utils;
+using MealShareDotNet.Core.Data.DTOs;
 
 public static class StringMatch
 {
+
+//Individual Matches, used within the Result object
+public class Match
+{
+    public double percent  {get; set;} = 0;
+    public IngredientDTO Ingredient {get; set;} = null;
+    public Match(double percent, IngredientDTO result)
+    {
+        this.percent = percent;
+        this.Ingredient= result;
+    }
+}
+
+//The thing returned
+public class Result
+{
+    public IngredientDTO Original {get; set;}
+    public List<Match> Matches {get; set;} = [];
+}
 
 /// Joshua Honig on Stack Exchange https://stackoverflow.com/questions/9453731/how-to-calculate-distance-similarity-measure-of-given-2-strings
 /// <summary>
@@ -87,22 +107,30 @@ private static void Swap<T>(ref T arg1, ref T arg2) {
     arg2 = temp;
 }
 
-public static List<List<string>> checkIngredients(List<string> NewIngredients, List<string> AllIngredients)
+public static List<Result> checkIngredients(List<IngredientDTO> NewIngredients, List<IngredientDTO> serverIngredients)
 {
-    foreach (string ingredient_S in NewIngredients)
+    List<Result> Results = new List<Result>();
+    foreach (IngredientDTO ingredient in NewIngredients)
     {
-        int[] Ingredient = ingredient_S.Select(n => Convert.ToInt32(n)).ToArray();
-        List<string> closeStrings = new List<string>();
-        foreach (string OldIngredient_S in AllIngredients)
+        int[] Ingredient = ingredient.Name.ToLower().Select(n => Convert.ToInt32(n)).ToArray();
+        Result currentResult = new Result();
+        currentResult.Original = ingredient;
+        foreach (IngredientDTO OldIngredient_S in serverIngredients)
         {
-            int[] OldIngredient = OldIngredient_S.Select(n => Convert.ToInt32(n)).ToArray();
-            if(DamerauLevenshteinDistance(Ingredient, OldIngredient, 2) < 2)
+            int[] OldIngredient = OldIngredient_S.Name.ToLower().Select(n => Convert.ToInt32(n)).ToArray();
+            double Distance = (double)(DamerauLevenshteinDistance(Ingredient, OldIngredient, 2));
+            int percentage = 0;
+            if( Distance > 0)
+                percentage = (int)((Distance / ingredient.Name.Length) * 100);
+            if(Distance < 4)
             {
-                closeStrings.add(OldIngredient_S);
+                Match currentMatch = new Match(percentage, OldIngredient_S);
+                currentResult.Matches.Add(currentMatch);
             }
-
         }
+        Results.Add(currentResult);
     }
+    return Results;
 }
 
 }
