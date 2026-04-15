@@ -56,8 +56,8 @@ public class RecipeScraper
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.ToString());
-            return null;
+            throw new NullReferenceException(
+                    "Recipe not found for given filter", e);
         }
         //foreach (var e in yaml.Documents.Where(d => d is not null))
         //{

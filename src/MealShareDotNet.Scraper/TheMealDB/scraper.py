@@ -108,6 +108,8 @@ def scrape(site):
     response = requests.get(site)
 
     recipe_json = json.loads(response.text)
+    if recipe_json["meals"] == None:
+        return "No Recipe exsists"
     recipe = parseJson(recipe_json["meals"][0])
     recipes = []
     recipes.append(recipe.makeYaml())
@@ -119,6 +121,8 @@ def multiScrape(site):
     recipe_json = json.loads(response.text)
     recipes = []
 
+    if recipe_json["meals"] == None:
+        return "No Recipe exsists"
     for item in recipe_json["meals"]:
         if len(item["strMeal"]) != 0:
             site = "https://www.themealdb.com/api/json/v1/1/search.php?s=" + item["strMeal"]
