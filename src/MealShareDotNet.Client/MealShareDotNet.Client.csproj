@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -25,5 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MealShareDotNet.Core\MealShareDotNet.Core.csproj" />
+    <ProjectReference Include="..\MealShareDotNet.Scraper\MealShareDotNet.Scraper.csproj" />
   </ItemGroup>
 </Project>

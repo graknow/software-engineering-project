@@ -1,7 +1,7 @@
-#Usage: catagoryScraper.py catagorty
-#Usage: firstLetterScraper.py firstLetter
-#Usage: mealIdScraper.py mealID
-#Usage: areaScraper.py area
-#Usage: ingredientScraper.py ingredient
-#Usage: randomScraper.py
-#Usage: nameScraper.py name
+catagory
+firstLetter
+mealId
+area
+ingredient
+random
+name

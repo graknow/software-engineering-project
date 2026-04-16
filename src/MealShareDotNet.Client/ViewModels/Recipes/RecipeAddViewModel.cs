@@ -15,6 +15,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using MealShareDotNet.Client.Services;
+using MealShareDotNet.Scraper;
+using System.Net;
 
 namespace MealShareDotNet.Client.ViewModels.Recipes;
 
@@ -25,6 +27,15 @@ public partial class RecipeAddViewModel : ViewModelBase
     
     [ObservableProperty]
     private VM _recipe = new();
+
+    [ObservableProperty]
+    private string _scraperName = "";
+
+    [ObservableProperty]
+    private string _scraperFilter = "";
+
+    [ObservableProperty]
+    private string _recomendations = "";
 
     private RecipeDTO _dto = new();
 
@@ -165,6 +176,61 @@ public partial class RecipeAddViewModel : ViewModelBase
     public void RemoveIngredient(IngredientVM vm)
     {
         Recipe.Ingredients.Remove(vm);
+    }
+
+    public async Task<List<RecipeDTO>> GetRecipe()
+    {
+        ScraperService.Initialize();
+
+        RecipeScraper currentScraper = null;
+        foreach(RecipeScraper scraper in ScraperService.ScraperList)
+        {
+            if(scraper.ScraperName == ScraperName)
+            {
+                currentScraper = scraper;
+                break;
+            }
+        }
+
+        if(currentScraper == null)
+        {
+            List<RecipeDTO> result = [new RecipeDTO(){Name = "No Scraper for this search"}];
+            return result;
+        }
+
+        List<string> arguments = [ScraperFilter];
+        //Console.WriteLine(currentScraper.DisplayName + arguments[0]);
+        var recipes = await currentScraper.getRecipe(arguments);
+
+        return recipes;
+    }
+    
+    [RelayCommand]
+    public async Task ScrapeRecipe()
+    {
+        Random rnd = new Random();
+        List<RecipeDTO> recipes = await GetRecipe();
+        int index = rnd.Next(0, recipes.Count - 1);
+        RecipeDTO recipe = recipes[index];
+        Recipe.Name = recipe.Name;
+        Recipe.Instructions = recipe.Instructions;
+        List<IngredientVM> ingredients = [];
+
+        foreach(IngredientDTO ingredient in recipe.Ingredients)
+        {
+            IngredientVM i = new IngredientVM();
+            i.Name = ingredient.Name;
+            i.Unit = ingredient.QuantityName;
+            if(!(ingredient.Mass == null))
+                i.Value = ingredient.Mass.ToString();
+            else if(!(ingredient.Volume == null))
+                i.Value = ingredient.Volume.ToString();
+            else if(!(ingredient.Quantity == null))
+                i.Value = ingredient.Quantity.ToString();
+            ingredients.Add(i); 
+        }
+
+        Recipe.Ingredients = new ObservableCollection<IngredientVM>(ingredients);
     }
 
     public partial class VM : ViewModelBase

@@ -18,7 +18,7 @@ public static class ScraperService
         using var process = new Process();
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.FileName = "./TheMealDB/handler.py";
+        process.StartInfo.FileName = "src/MealShareDotNet.Scraper/TheMealDB/handler.py";
         process.StartInfo.Arguments = fileArguments;
 
         //Start the process
@@ -61,13 +61,13 @@ public static class ScraperService
 
     public static async void Initialize()
     {
-        string path = "./TheMealDB/scrapers.txt";
+        string path = "src/MealShareDotNet.Scraper/TheMealDB/scrapers.txt";
 
         if (!File.Exists(path))
         {
             using var process = new Process();
             process.StartInfo.UseShellExecute = false;
-            process.StartInfo.FileName = "./TheMealDB/handler.py";
+            process.StartInfo.FileName = "src/MealShareDotNet.Scraper/TheMealDB/handler.py";
             process.StartInfo.Arguments = "-d";
 
             //Start the process

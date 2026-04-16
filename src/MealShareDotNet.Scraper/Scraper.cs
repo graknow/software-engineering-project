@@ -18,7 +18,9 @@ public class RecipeScraper
 
     public async Task<List<RecipeDTO>> getRecipe(List<string> Arguments)
     {
-        string fileArguments = "-n " + ScraperName + " -a ";
+        string fileArguments = "-n " + ScraperName;
+        if(ScraperName != "random")
+            fileArguments = fileArguments + " -a ";
         foreach (string argument in Arguments)
         {
             fileArguments = fileArguments + argument + " ";
@@ -27,7 +29,7 @@ public class RecipeScraper
         using var process = new Process();
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.FileName = "./TheMealDB/handler.py";
+        process.StartInfo.FileName = "src/MealShareDotNet.Scraper/TheMealDB/handler.py";
         process.StartInfo.Arguments = fileArguments;
 
         //Start the process
