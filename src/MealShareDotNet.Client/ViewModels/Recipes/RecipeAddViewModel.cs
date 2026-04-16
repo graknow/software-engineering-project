@@ -1,0 +1,304 @@
+using System;
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Avalonia.Controls.ApplicationLifetimes;
+using CommunityToolkit.Mvvm.ComponentModel;
+using MealShareDotNet.Core.Data.DTOs;
+using MealShareDotNet.Core.Data.Entities;
+using MealShareDotNet.Core.Services;
+using CommunityToolkit.Mvvm.Input;
+using Avalonia.Controls.Notifications;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Collections.ObjectModel;
+using Avalonia.Controls;
+using MealShareDotNet.Client.Services;
+using MealShareDotNet.Scraper;
+using System.Net;
+using MealShareDotNet.Client.Converters;
+using System.Collections.Frozen;
+
+namespace MealShareDotNet.Client.ViewModels.Recipes;
+
+public partial class RecipeAddViewModel : ViewModelBase
+{
+    private readonly IEnumerable<IRecipeService> _recipeService;
+    private readonly INotificationService _notifications;
+    
+    [ObservableProperty]
+    private VM _recipe = new();
+
+    [ObservableProperty]
+    private string _scraperName = "";
+
+    [ObservableProperty]
+    private string _scraperFilter = "";
+
+    [ObservableProperty]
+    private string _recomendations = "";
+
+    private RecipeDTO _dto = new();
+    private string _source = "local";
+
+    public RecipeAddViewModel(IEnumerable<IRecipeService> recipeService, INotificationService notificationService)
+    {
+        _recipeService = recipeService;
+        _notifications = notificationService;
+    }
+
+    public async Task LoadRecipeAsync(long id, string source = "local")
+    {
+        _source = source;
+        // TODO: Proper error handling
+        _dto = await _recipeService.First(r => r.Name == source).GetRecipeAsync(id) ?? throw new System.Exception("no");
+
+        Recipe.Id = _dto.Id;
+        Recipe.Name = _dto.Name;
+        Recipe.CookTime = _dto.CookTime;
+        Recipe.Price = _dto.Price;
+        Recipe.ServingQuantity = _dto.ServingQuantity;
+        Recipe.Instructions = _dto.Instructions;
+        // TODO: maybe store a formatted string instead of the datetime object
+        Recipe.UpdatedDate = _dto.UpdatedDate;
+
+        Recipe.Ingredients = new ObservableCollection<IngredientVM>(_dto.Ingredients.Select(i => 
+        {
+            var vm = new IngredientVM();
+            vm.Id = i.Id;
+            vm.Name = i.Name;
+            if (i.Quantity is not null)
+            {
+                vm.Value = i.Quantity.ToString()!;
+                vm.Unit = "ct";
+            }
+            else if (i.Mass is not null)
+            {
+                vm.Value = i.Mass.ToString()!;
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Mass ?? throw new Exception(), StandardUnitConverter.UnitType.VOLUME);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Mass ?? throw new Exception(), vm.Unit);
+            }
+            else if (i.Volume is not null)
+            {
+                vm.Value = i.Volume.ToString()!;
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Volume ?? throw new Exception(), StandardUnitConverter.UnitType.VOLUME);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Volume ?? throw new Exception(), vm.Unit);
+            }
+
+            vm.UnitOptions = StandardUnitConverter.Instance.VolumeConversions.Keys.Concat(
+                StandardUnitConverter.Instance.MassConversions.Keys
+            ).Concat(["ct"]);
+            
+            return vm;
+        }).ToList());
+
+        Recipe.Tags = new ObservableCollection<TagVM>(_dto.Tags.Select(t => new TagVM()
+        {
+            Id = t.Id ?? throw new Exception("ERJEROIERJOIERJ"),
+            Name = t.Name,
+            Description = t.Description
+        }).ToList());
+    }
+
+    [RelayCommand(CanExecute = nameof(IsRecipeValid))]
+    public async Task InsertOrUpdateRecipe()
+    {
+        _dto.Name = Recipe.Name;
+        _dto.ServingQuantity = Recipe.ServingQuantity;
+        _dto.CookTime = Recipe.CookTime;
+        _dto.Price = Recipe.Price;
+        _dto.Instructions = Recipe.Instructions;
+
+        _dto.Ingredients = Recipe.Ingredients.Select(vm =>
+        {
+            var i = new IngredientDTO();
+
+            i.Id = vm.Id;
+            i.Name = vm.Name;
+
+            if (StandardUnitConverter.Instance.VolumeConversions.Keys.Contains(vm.Unit))
+                i.Volume = StandardUnitConverter.Instance.GetStandardMeasure(float.Parse(vm.Value), vm.Unit);
+            else if (StandardUnitConverter.Instance.MassConversions.Keys.Contains(vm.Unit))
+                i.Mass = StandardUnitConverter.Instance.GetStandardMeasure(float.Parse(vm.Value), vm.Unit);
+            else
+                i.Quantity = float.Parse(vm.Value);
+
+            return i;
+        }).ToList();
+
+        _dto.Tags = Recipe.Tags.Select(vm => new TagDTO()
+        {
+            Id = vm.Id,
+            Name = vm.Name,
+            Description = vm.Description,
+        }).ToList();
+
+        RecipeDTO result;
+
+        // TODO: Move this logic to service
+        if (_dto.Id is null)
+        {
+            result = await _recipeService.First(r => r.Name == _source).InsertRecipeAsync(_dto);
+        }
+        else
+        {
+            result = await _recipeService.First(r => r.Name == _source).UpdateRecipeAsync(_dto);
+        }
+
+        var args = new PageChangeEventArgs()
+        {
+            NextViewType = typeof(RecipeViewModel),
+            NextPageConfig = (view) =>
+            {
+                var viewVM = view as RecipeViewModel;
+                _ = viewVM.LoadRecipeAsync(_dto.Id ?? -1);
+                return viewVM;   
+            }
+        };
+
+        EmitPageChange(args);
+    }
+
+    public bool IsRecipeValid()
+    {
+        return true;
+    }
+
+    [RelayCommand]
+    public void AddTag()
+    {
+        Recipe.Tags.Add(new());
+        _notifications.ShowInfo("test", "message");
+    }
+
+    [RelayCommand]
+    public void AddIngredient()
+    {
+        Recipe.Ingredients.Add(new());
+    }
+
+    [RelayCommand]
+    public void RemoveTag(TagVM vm)
+    {
+        Recipe.Tags.Remove(vm);
+    }
+
+    [RelayCommand]
+    public void RemoveIngredient(IngredientVM vm)
+    {
+        Recipe.Ingredients.Remove(vm);
+    }
+
+    public async Task<List<RecipeDTO>> GetRecipe()
+    {
+        ScraperService.Initialize();
+
+        RecipeScraper currentScraper = null;
+        foreach(RecipeScraper scraper in ScraperService.ScraperList)
+        {
+            if(scraper.ScraperName == ScraperName)
+            {
+                currentScraper = scraper;
+                break;
+            }
+        }
+
+        if(currentScraper == null)
+        {
+            List<RecipeDTO> result = [new RecipeDTO(){Name = "No Scraper for this search"}];
+            return result;
+        }
+
+        List<string> arguments = [ScraperFilter];
+        //Console.WriteLine(currentScraper.DisplayName + arguments[0]);
+        var recipes = await currentScraper.getRecipe(arguments);
+
+        return recipes;
+    }
+    
+    [RelayCommand]
+    public async Task ScrapeRecipe()
+    {
+        Random rnd = new Random();
+        List<RecipeDTO> recipes = await GetRecipe();
+        int index = rnd.Next(0, recipes.Count - 1);
+        RecipeDTO recipe = recipes[index];
+        Recipe.Name = recipe.Name;
+        Recipe.Instructions = recipe.Instructions;
+        List<IngredientVM> ingredients = [];
+
+        foreach(IngredientDTO ingredient in recipe.Ingredients)
+        {
+            IngredientVM i = new IngredientVM();
+            i.Name = ingredient.Name;
+            i.Unit = ingredient.QuantityName;
+            if(!(ingredient.Mass == null))
+                i.Value = ingredient.Mass.ToString();
+            else if(!(ingredient.Volume == null))
+                i.Value = ingredient.Volume.ToString();
+            else if(!(ingredient.Quantity == null))
+                i.Value = ingredient.Quantity.ToString();
+            ingredients.Add(i); 
+        }
+
+        Recipe.Ingredients = new ObservableCollection<IngredientVM>(ingredients);
+    }
+
+    public partial class VM : ViewModelBase
+    {
+        public long? Id { get; set; }
+
+        [ObservableProperty]
+        private string _name = "";
+
+        [ObservableProperty]
+        private int? _cookTime;
+
+        [ObservableProperty]
+        private int? _price;
+
+        [ObservableProperty]
+        private int? _servingQuantity;
+
+        [ObservableProperty]
+        private string _instructions = "";
+
+        [ObservableProperty]
+        private DateTime _updatedDate;
+
+        [ObservableProperty]
+        private ObservableCollection<IngredientVM> _ingredients = [];
+
+        [ObservableProperty]
+        private ObservableCollection<TagVM> _tags = [];
+    }
+
+    public partial class IngredientVM : ViewModelBase
+    {
+        public long? Id { get; set; }
+
+        [ObservableProperty]
+        private string _name = "";
+        
+        [ObservableProperty]
+        private string _value = "";
+
+        [ObservableProperty]
+        private string? _unit;
+
+        [ObservableProperty]
+        private IEnumerable<string> _unitOptions = [];
+    }
+
+    public partial class TagVM : ViewModelBase
+    {
+        public long? Id { get; set; }
+
+        [ObservableProperty]
+        private string _name = "";
+
+        [ObservableProperty]
+        private string? _description = "";
+    }
+}

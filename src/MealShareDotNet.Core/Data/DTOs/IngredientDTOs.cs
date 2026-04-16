@@ -13,6 +13,7 @@ public class IngredientDTO
     public int? Mass { get; set; }
     public int? Volume { get; set; }
     public float? Quantity { get; set; }
+    public string? QuantityName { get; set; }
 
     public static IngredientDTO FromEntity(RecipeIngredient ri)
     {

@@ -50,10 +50,10 @@ public partial class MealPlanViewModel : ViewModelBase
     private ObservableCollection<RecipeDropdownVM> _recipeOptions = [];
 
 
-    public MealPlanViewModel(IMealPlanService mealPlans, IRecipeService recipes)
+    public MealPlanViewModel(IMealPlanService mealPlans, IEnumerable<IRecipeService> recipes)
     {
         _mealPlans = mealPlans;
-        _recipes = recipes;
+        _recipes = recipes.First(r => r is RepositoryRecipeService);
 
         Task.Run(async () => RecipeOptions = new ObservableCollection<RecipeDropdownVM>(
             (await _recipes.GetRecipeListingsAsync(new())).Select(r => new RecipeDropdownVM()
@@ -81,6 +81,7 @@ public partial class MealPlanViewModel : ViewModelBase
                 .Where(p => DateOnly.FromDateTime(p.ScheduledTime) == date)
                 .Select(p => new MealEventVM()
                 {
+                    EventName = p.EventName,
                     RecipeName = p.Recipe.Name,
                     ScheduledTime = TimeOnly.FromDateTime(p.ScheduledTime)
                 });
@@ -166,6 +167,9 @@ public partial class MealPlanViewModel : ViewModelBase
 
     public partial class MealEventVM : ViewModelBase
     {
+        [ObservableProperty]
+        private string _eventName = string.Empty;
+
         [ObservableProperty]
         private string _recipeName = string.Empty;
 

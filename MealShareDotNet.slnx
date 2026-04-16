@@ -7,6 +7,7 @@
     <Project Path="src/MealShareDotNet.Client.Desktop/MealShareDotNet.Client.Desktop.csproj" />
     <Project Path="src/MealShareDotNet.Client/MealShareDotNet.Client.csproj" />
     <Project Path="src/MealShareDotNet.Core/MealShareDotNet.Core.csproj" />
+    <Project Path="src/MealShareDotNet.Scraper/MealShareDotNet.Scraper.csproj" />
     <Project Path="src/MealShareDotNet.Server/MealShareDotNet.Server.csproj" />
   </Folder>
   <Folder Name="/tests/">

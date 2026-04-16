@@ -5,6 +5,7 @@ namespace MealShareDotNet.Core.Services;
 
 public interface IRecipeService
 {
+    string Name { get; set; }
     Task<IEnumerable<RecipeListingDTO>> GetRecipeListingsAsync(GetRecipeListingsQuery query);
     Task<RecipeDTO?> GetRecipeAsync(long id);
     Task<RecipeDTO?> GetRandomDailyRecipeAsync();

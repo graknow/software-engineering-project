@@ -1,0 +1,129 @@
+
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MealShareDotNet.Client.ViewModels.Recipes"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MealShareDotNet.Client.Views.Recipes.RecipeAddView"
+             x:DataType="vm:RecipeAddViewModel">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+        <TextBlock Margin="0 5" Text="Name" />
+        <TextBox Text="{Binding Recipe.Name}" />
+        <TextBlock Margin="0 5" Text="Cooking Time (Minutes):" />
+        <TextBox Text="{Binding Recipe.CookTime}" />
+        <TextBlock Margin="0 5" Text="Serving Quantity (People):" />
+        <TextBox Text="{Binding Recipe.ServingQuantity}" />
+        <TextBlock Margin="0 5" Text="Price (Dollars):" />
+        <TextBox Text="{Binding Recipe.Price}" />
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <TextBlock Margin="0 5" Text="Scraper" />
+                <TextBox HorizontalAlignment="Stretch" Text="{Binding ScraperName}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Margin="0 5" Text="Filter" />
+                <TextBox Margin="5 0 0 0" HorizontalAlignment="Stretch" Text="{Binding ScraperFilter}" />
+            </StackPanel>
+        </Grid>
+        <Button Margin="0 5" HorizontalAlignment="Right" Command="{Binding ScrapeRecipe}" Content="Scrape"/>  
+        <TextBlock Margin="0 15 0 5" Text="Instructions:" />
+        <TextBox MinHeight="200" AcceptsReturn="True" TextWrapping="WrapWithOverflow" Text="{Binding Recipe.Instructions}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" Grid.Column="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Ingredients:" />
+                    <Button Command="{Binding AddIngredient}" Content="+" HorizontalAlignment="Right" />
+                </StackPanel>
+                <ScrollViewer Height="500">
+                    <ItemsControl ItemsSource="{Binding Recipe.Ingredients}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Button Content="x" Background="Transparent"
+                                            Command="{Binding $parent[ItemsControl].((vm:RecipeAddViewModel)DataContext).RemoveIngredient}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            Grid.Row="1"
+                                            Grid.Column="0"/>
+                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="1" />
+                                    <TextBox Text="{Binding Name}"
+                                             IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                             Grid.Row="1"
+                                             Grid.Column="1" />
+                                    <TextBlock Text="Amount" Margin="0 5" Grid.Row="0" Grid.Column="2" />
+                                    <TextBox Text="{Binding Value}" Grid.Row="1" Grid.Column="2" />
+                                    <TextBlock Text="Unit" Grid.Row="0" Grid.Column="3" />
+                                    <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding Unit}" Grid.Row="1" Grid.Column="3" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+            <StackPanel Orientation="Vertical" Grid.Column="1">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Tags:" />
+                    <Button Command="{Binding AddTag}" Content="+" HorizontalAlignment="Right" />
+                </StackPanel>
+                <ScrollViewer Height="500">
+                    <ItemsControl ItemsSource="{Binding Recipe.Tags}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" /> 
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="2*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Button Content="x" Background="Transparent"
+                                            Command="{Binding $parent[ItemsControl].((vm:RecipeAddViewModel)DataContext).RemoveTag}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            Grid.Row="1"
+                                            Grid.Column="0"/>
+                                    <TextBlock Text="Name" Margin="0 5" Grid.Row="0" Grid.Column="1" />
+                                    <TextBox Text="{Binding Name}"
+                                             IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                             Grid.Row="1"
+                                             Grid.Column="1" />
+                                    <TextBlock Text="Description" Margin="0 5" Grid.Row="0" Grid.Column="2" />
+                                    <TextBox Text="{Binding Description}"
+                                             IsReadOnly="{Binding Id, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                             Grid.Row="1"
+                                             Grid.Column="2" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
+        <Grid Height="100">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Command="{Binding InsertOrUpdateRecipe}" Content="Confirm" Grid.Column="0" HorizontalAlignment="Right"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

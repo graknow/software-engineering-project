@@ -47,7 +47,7 @@ public class SqliteRecipeRepository :
     }
 
     // TODO: Proper search parameters, like tags, ingredients, etc
-    public Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query)
+    public async Task<IEnumerable<Recipe>> SearchRecipesAsync(GetRecipeListingsQuery query)
     {
         var sql = """
             SELECT
@@ -59,6 +59,35 @@ public class SqliteRecipeRepository :
             FROM Recipes AS Recipe
             """;
 
+        var tagSql = """
+            SELECT
+                RT.RecipeId,
+                RT.TagId
+            FROM RecipeTag AS RT
+            WHERE RT.RecipeId = @Id;
+
+            SELECT
+                Tag.Id,
+                Tag.Name,
+                Tag.Description
+            FROM RecipeTag AS RT
+            LEFT OUTER JOIN
+            (
+                SELECT
+                    T.Id,
+                    T.Name,
+                    T.Description
+                FROM Tags T
+            ) AS Tag ON Tag.Id = RT.TagId
+            WHERE RT.RecipeId = @Id;
+            """;
+        
+        if (!string.IsNullOrWhiteSpace(query.Name))
+        {
+            query.Name = $"%{query.Name}%";
+            sql += "\nWHERE Recipe.Name LIKE @Name --case-insensitive";
+        }
+
         if (query.PageSize is not null)
         {
             sql += "\nLIMIT @PageSize OFFSET @PageOffset";
@@ -68,12 +97,23 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        return conn.QueryAsync<Recipe>(sql,
-                new
-                {
-                    PageSize = query.PageSize,
-                    PageOffset = query.PageOffset
-                }, _transaction);
+        var results = await conn.QueryAsync<Recipe>(sql, query, _transaction);
+        
+        foreach (var recipe in results)
+        {
+            var tagResults = await conn.QueryMultipleAsync(tagSql, new { Id = recipe.Id });
+            recipe.RecipeTags = (await tagResults.ReadAsync<RecipeTag>()).ToList();
+            var tags = await tagResults.ReadAsync<Tag>();
+
+            foreach (var tag in tags)
+            {
+                var rt = recipe.RecipeTags.Single(rt => rt.TagId == tag.Id);
+
+                rt.Tag = tag;
+            }
+        }
+
+        return results;
     }
 
     public async Task<Recipe?> GetRecipeByIdAsync(long id)

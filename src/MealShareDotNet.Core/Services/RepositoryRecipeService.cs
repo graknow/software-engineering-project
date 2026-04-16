@@ -10,6 +10,8 @@ public class RepositoryRecipeService : IRecipeService
 {
     private IRecipeRepository _db;
 
+    public string Name { get; set; } = "local";
+
     public RepositoryRecipeService(IRecipeRepository db)
     {
         _db = db;

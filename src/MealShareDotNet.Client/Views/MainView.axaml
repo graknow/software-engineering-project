@@ -27,6 +27,8 @@
             </ListBox.ItemTemplate>
         </ListBox>
     </Border>
-    <ContentControl Content="{Binding CurrentPage}"/>
+    <ScrollViewer Padding="10 10">
+        <ContentControl Content="{Binding CurrentPage}"/>
+    </ScrollViewer>
   </DockPanel>
 </UserControl>

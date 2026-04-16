@@ -1,0 +1,7 @@
+name
+area
+catagory
+mealId
+firstLetter
+ingredient
+random

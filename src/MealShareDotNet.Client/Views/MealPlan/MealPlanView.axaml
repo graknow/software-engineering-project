@@ -74,7 +74,10 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Border Width="150" Background="Lavender">
-                        <TextBlock Text="{Binding RecipeName}" TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Vertical">
+                          <TextBlock FontWeight="Bold" Text="{Binding EventName}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding RecipeName}" TextWrapping="Wrap"/>
+                        </StackPanel>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>

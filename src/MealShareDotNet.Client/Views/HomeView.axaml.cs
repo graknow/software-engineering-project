@@ -1,4 +1,3 @@
-
 using Avalonia.Controls;
 
 namespace MealShareDotNet.Client.Views;
