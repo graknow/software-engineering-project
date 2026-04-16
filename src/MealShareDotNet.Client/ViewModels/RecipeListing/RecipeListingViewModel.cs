@@ -22,7 +22,7 @@ namespace MealShareDotNet.Client.ViewModels.RecipeListing;
 
 public partial class RecipeListingViewModel : ViewModelBase
 {
-    private readonly IRecipeService _recipeService;
+    private readonly IEnumerable<IRecipeService> _recipeService;
 
     [ObservableProperty]
     private ObservableCollection<RecipeListingDTO> recipes = [];
@@ -33,13 +33,16 @@ public partial class RecipeListingViewModel : ViewModelBase
     [ObservableProperty]
     private bool isEmpty;
 
+    [ObservableProperty]
+    private string _recipeSearch = "";
+
     // Convenience property so XAML doesn't need a converter.
     public bool IsNotLoading => !IsLoading;
 
     // Visible when loading finished and list is empty
     public bool ShowEmpty => IsNotLoading && IsEmpty;
 
-    public RecipeListingViewModel(IRecipeService recipeService)
+    public RecipeListingViewModel(IEnumerable<IRecipeService> recipeService)
     {
         _recipeService = recipeService;
 
@@ -80,11 +83,15 @@ public partial class RecipeListingViewModel : ViewModelBase
         {
             IsLoading = true;
             query ??= new GetRecipeListingsQuery();
+            query.Name = RecipeSearch;
 
-            IEnumerable<RecipeListingDTO> results;
+            IEnumerable<RecipeListingDTO> results = [];
             try
             {
-                results = await _recipeService.GetRecipeListingsAsync(query);
+                foreach (var service in _recipeService)
+                {
+                    results = results.Concat(await service.GetRecipeListingsAsync(query));
+                }
             }
             catch (Exception ex)
             {
@@ -142,5 +149,10 @@ public partial class RecipeListingViewModel : ViewModelBase
         };
 
         EmitPageChange(args);
+    }
+
+    partial void OnRecipeSearchChanged(string value)
+    {
+        _ = LoadRecipesAsync();
     }
 }

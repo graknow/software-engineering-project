@@ -25,7 +25,7 @@ public class RecipeControllerV1 : ControllerBase
 
     [HttpGet("listings")]
     public async Task<ActionResult<IEnumerable<RecipeListingDTO>>> GetRecipeListings(
-            [FromQuery] PageableParams pager
+            [FromQuery] PageableParams pager, [FromQuery] GetRecipeListingsQuery query
             )
     {
         if (pager.PageSize is null != pager.PageNumber is null)
@@ -43,11 +43,8 @@ public class RecipeControllerV1 : ControllerBase
             pager.PageNumber = 1;
         }
 
-        var query = new GetRecipeListingsQuery()
-        {
-            PageSize = pager.PageSize,
-            PageOffset = pager.PageOffset
-        };
+        query.PageOffset = pager.PageOffset;
+        query.PageSize = pager.PageSize;
 
         return Ok(await _recipes.GetRecipeListingsAsync(query));
     }

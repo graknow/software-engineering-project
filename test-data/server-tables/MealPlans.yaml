@@ -1,0 +1,16 @@
+- Id: 0
+  RecipeId: 0
+  EventName: "Dinner"
+  ScheduledTime: "$$0 14 00"
+- Id: 1
+  RecipeId: 1
+  EventName: "Some event"
+  ScheduledTime: "$$3 17 30"
+- Id: 2
+  RecipeId: 0
+  EventName: "Breakfast"
+  ScheduledTime: "$$4 7 15"
+- Id: 3
+  RecipeId: 2
+  EventName: "Meal"
+  ScheduledTime: "$$7 12 00"

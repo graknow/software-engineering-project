@@ -56,7 +56,7 @@ public class SqliteRecipeRepository :
                 Recipe.CookTime,
                 Recipe.ServingQuantity,
                 Recipe.UpdatedDate
-            FROM Recipes AS Recipe;
+            FROM Recipes AS Recipe
             """;
 
         var tagSql = """
@@ -81,6 +81,12 @@ public class SqliteRecipeRepository :
             ) AS Tag ON Tag.Id = RT.TagId
             WHERE RT.RecipeId = @Id;
             """;
+        
+        if (!string.IsNullOrWhiteSpace(query.Name))
+        {
+            query.Name = $"%{query.Name}%";
+            sql += "\nWHERE Recipe.Name LIKE @Name --case-insensitive";
+        }
 
         if (query.PageSize is not null)
         {
@@ -91,12 +97,7 @@ public class SqliteRecipeRepository :
 
         using var queryConn = GetNewConnectionIfNecessary();
         var conn = queryConn is not null ? queryConn : _activeConnection;
-        var results = await conn.QueryAsync<Recipe>(sql,
-                new
-                {
-                    PageSize = query.PageSize,
-                    PageOffset = query.PageOffset
-                }, _transaction);
+        var results = await conn.QueryAsync<Recipe>(sql, query, _transaction);
         
         foreach (var recipe in results)
         {

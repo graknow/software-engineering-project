@@ -14,6 +14,8 @@ using MealShareDotNet.Client.Services;
 using Avalonia.Controls;
 using MealShareDotNet.Client.ViewModels.RecipeListing;
 using Avalonia.Media;
+using MealShareDotNet.Client.ViewModels.SourceManagement;
+using System.Net.Http;
 
 namespace MealShareDotNet.Client.ViewModels;
 
@@ -37,9 +39,12 @@ public partial class MainViewModel : ViewModelBase
         var collection = windowServices;
         collection.AddTransient<IRecipeRepository>(s => new SqliteRecipeRepository(connectionString));
         collection.AddTransient<IRecipeService, RepositoryRecipeService>();
+        collection.AddTransient<IRecipeService, ServerRecipeService>();
         collection.AddTransient<IMealPlanRepository>(s => new SqliteMealPlanRepository(connectionString));
         collection.AddTransient<IMealPlanService, RepositoryMealPlanService>();
+        collection.AddSingleton<ServerRecipeService.ServerConnection>(_ => new() { Address = "http://localhost:5149" });
         collection.AddSingleton<INotificationService, NotificationService>();
+        collection.AddTransient<HttpClient>();
 
         // Provide pages for automated dependency injection
         collection.AddTransient<HomeViewModel>();
@@ -47,6 +52,7 @@ public partial class MainViewModel : ViewModelBase
         collection.AddTransient<RecipeViewModel>();
         collection.AddTransient<RecipeAddViewModel>();
         collection.AddTransient<RecipeListingViewModel>();
+        collection.AddTransient<SourceManagementViewModel>();
 
         _provider = collection.BuildServiceProvider();
 
@@ -54,6 +60,7 @@ public partial class MainViewModel : ViewModelBase
             new MenuItem("Home", () => _provider.GetRequiredService<HomeViewModel>()),
             new MenuItem("Recipes", () => _provider.GetRequiredService<RecipeListingViewModel>()),
             new MenuItem("Meal Plan", () => _provider.GetRequiredService<MealPlanViewModel>()),
+            new MenuItem("Sources", () => _provider.GetRequiredService<SourceManagementViewModel>()),
         ]);
 
         var page = initialPage ?? MenuItems.First();

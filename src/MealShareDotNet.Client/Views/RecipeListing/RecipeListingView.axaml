@@ -9,6 +9,7 @@
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -17,11 +18,16 @@
       <Button Content="Add" Command="{Binding LoadAddRecipeViewAsync}" />
     </StackPanel>
 
-    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
+    <StackPanel Grid.Row="1">
+      <TextBlock Text="Search" />
+      <TextBox Text="{Binding RecipeSearch}" />
+    </StackPanel>
+
+    <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
       <TextBlock Text="Loading recipes..." FontSize="16" HorizontalAlignment="Center" />
     </StackPanel>
 
-    <ScrollViewer Grid.Row="1" IsVisible="{Binding IsNotLoading}">
+    <ScrollViewer Grid.Row="2" IsVisible="{Binding IsNotLoading}">
       <ItemsControl ItemsSource="{Binding Recipes}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
@@ -90,7 +96,7 @@
     </ScrollViewer>
 
     <!-- Show when finished loading but no items were found -->
-    <TextBlock Grid.Row="1"
+    <TextBlock Grid.Row="2"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                FontSize="14"
