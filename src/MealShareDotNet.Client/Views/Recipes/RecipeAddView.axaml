@@ -16,6 +16,21 @@
         <TextBox Text="{Binding Recipe.ServingQuantity}" />
         <TextBlock Margin="0 5" Text="Price (Dollars):" />
         <TextBox Text="{Binding Recipe.Price}" />
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <TextBlock Margin="0 5" Text="Scraper" />
+                <TextBox HorizontalAlignment="Stretch" Text="{Binding ScraperName}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Margin="0 5" Text="Filter" />
+                <TextBox Margin="5 0 0 0" HorizontalAlignment="Stretch" Text="{Binding ScraperFilter}" />
+            </StackPanel>
+        </Grid>
+        <Button Margin="0 5" HorizontalAlignment="Right" Command="{Binding ScrapeRecipe}" Content="Scrape"/>  
         <TextBlock Margin="0 15 0 5" Text="Instructions:" />
         <TextBox MinHeight="200" AcceptsReturn="True" TextWrapping="WrapWithOverflow" Text="{Binding Recipe.Instructions}" />
         <Grid>
