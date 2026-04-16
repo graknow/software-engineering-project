@@ -17,12 +17,14 @@ using Avalonia.Controls;
 using MealShareDotNet.Client.Services;
 using MealShareDotNet.Scraper;
 using System.Net;
+using MealShareDotNet.Client.Converters;
+using System.Collections.Frozen;
 
 namespace MealShareDotNet.Client.ViewModels.Recipes;
 
 public partial class RecipeAddViewModel : ViewModelBase
 {
-    private readonly IRecipeService _recipeService;
+    private readonly IEnumerable<IRecipeService> _recipeService;
     private readonly INotificationService _notifications;
     
     [ObservableProperty]
@@ -38,17 +40,19 @@ public partial class RecipeAddViewModel : ViewModelBase
     private string _recomendations = "";
 
     private RecipeDTO _dto = new();
+    private string _source = "local";
 
-    public RecipeAddViewModel(IRecipeService recipeService, INotificationService notificationService)
+    public RecipeAddViewModel(IEnumerable<IRecipeService> recipeService, INotificationService notificationService)
     {
         _recipeService = recipeService;
         _notifications = notificationService;
     }
 
-    public async Task LoadRecipeAsync(long id)
+    public async Task LoadRecipeAsync(long id, string source = "local")
     {
+        _source = source;
         // TODO: Proper error handling
-        _dto = await _recipeService.GetRecipeAsync(id) ?? throw new System.Exception("no");
+        _dto = await _recipeService.First(r => r.Name == source).GetRecipeAsync(id) ?? throw new System.Exception("no");
 
         Recipe.Id = _dto.Id;
         Recipe.Name = _dto.Name;
@@ -67,21 +71,24 @@ public partial class RecipeAddViewModel : ViewModelBase
             if (i.Quantity is not null)
             {
                 vm.Value = i.Quantity.ToString()!;
-                vm.Unit = "";
-                vm.UnitOptions = [];
+                vm.Unit = "ct";
             }
             else if (i.Mass is not null)
             {
                 vm.Value = i.Mass.ToString()!;
-                vm.Unit = "massPlaceholder";
-                vm.UnitOptions = []; // TODO: replace with known list of mass units
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Mass ?? throw new Exception(), StandardUnitConverter.UnitType.VOLUME);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Mass ?? throw new Exception(), vm.Unit);
             }
             else if (i.Volume is not null)
             {
                 vm.Value = i.Volume.ToString()!;
-                vm.Unit = "volumePlaceholder";
-                vm.UnitOptions = []; // TODO: replace with know list of volume units
+                vm.Unit = StandardUnitConverter.Instance.BestUnitMatch(i.Volume ?? throw new Exception(), StandardUnitConverter.UnitType.VOLUME);
+                vm.Value = StandardUnitConverter.Instance.GetUnitMeasurement(i.Volume ?? throw new Exception(), vm.Unit);
             }
+
+            vm.UnitOptions = StandardUnitConverter.Instance.VolumeConversions.Keys.Concat(
+                StandardUnitConverter.Instance.MassConversions.Keys
+            ).Concat(["ct"]);
             
             return vm;
         }).ToList());
@@ -110,7 +117,12 @@ public partial class RecipeAddViewModel : ViewModelBase
             i.Id = vm.Id;
             i.Name = vm.Name;
 
-            // TODO: Ingredient conversion logic and additions
+            if (StandardUnitConverter.Instance.VolumeConversions.Keys.Contains(vm.Unit))
+                i.Volume = StandardUnitConverter.Instance.GetStandardMeasure(float.Parse(vm.Value), vm.Unit);
+            else if (StandardUnitConverter.Instance.MassConversions.Keys.Contains(vm.Unit))
+                i.Mass = StandardUnitConverter.Instance.GetStandardMeasure(float.Parse(vm.Value), vm.Unit);
+            else
+                i.Quantity = float.Parse(vm.Value);
 
             return i;
         }).ToList();
@@ -127,11 +139,11 @@ public partial class RecipeAddViewModel : ViewModelBase
         // TODO: Move this logic to service
         if (_dto.Id is null)
         {
-            result = await _recipeService.InsertRecipeAsync(_dto);
+            result = await _recipeService.First(r => r.Name == _source).InsertRecipeAsync(_dto);
         }
         else
         {
-            result = await _recipeService.UpdateRecipeAsync(_dto);
+            result = await _recipeService.First(r => r.Name == _source).UpdateRecipeAsync(_dto);
         }
 
         var args = new PageChangeEventArgs()

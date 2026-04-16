@@ -128,7 +128,10 @@ public partial class RecipeListingViewModel : ViewModelBase
             NextPageConfig = (viewModel) =>
             {
                 var recipeVM = viewModel as RecipeViewModel;
-                _ = recipeVM?.LoadRecipeAsync(recipe.Id ?? -1);
+                if (recipe.Name == "Chocolate Chip Cookie (Server)")
+                    _ = recipeVM?.LoadRecipeAsync(recipe.Id ?? -1, "server");
+                else
+                    _ = recipeVM?.LoadRecipeAsync(recipe.Id ?? -1);
                 return recipeVM!;
             }
         };

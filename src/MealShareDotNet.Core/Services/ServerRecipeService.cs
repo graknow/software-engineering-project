@@ -48,7 +48,14 @@ public class ServerRecipeService : IRecipeService
 
     public async Task<RecipeDTO?> GetRecipeAsync(long id)
     {
-        throw new Exception();
+        var builder = _builder;
+        builder.Path += $"api/v1/recipes/{id}";
+
+        var response = await _client.GetAsync(builder.ToString());
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<RecipeDTO?>();
     }
 
     public async Task<RecipeDTO?> GetRandomDailyRecipeAsync()

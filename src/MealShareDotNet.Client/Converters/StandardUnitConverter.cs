@@ -127,6 +127,22 @@ public class StandardUnitConverter : IValueConverter
         }
     }
 
+    public int GetStandardMeasure(float unitMeasure, string unit)
+    {
+        if (VolumeConversions.TryGetValue(unit, out long volumeScale))
+        {
+            return (int)Math.Round(unitMeasure * volumeScale);
+        }
+        else if (MassConversions.TryGetValue(unit, out long massScale))
+        {
+            return (int)Math.Round(unitMeasure * massScale);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotSupportedException();

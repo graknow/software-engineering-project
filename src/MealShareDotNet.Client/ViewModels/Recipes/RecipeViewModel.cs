@@ -18,21 +18,21 @@ namespace MealShareDotNet.Client.ViewModels.Recipes;
 
 public partial class RecipeViewModel : ViewModelBase
 {
-    private readonly IRecipeService _recipeService;
+    private readonly IEnumerable<IRecipeService> _recipeService;
     
     [ObservableProperty]
     private VM _recipe = new();
 
-    public RecipeViewModel(IRecipeService recipeService)
+    public RecipeViewModel(IEnumerable<IRecipeService> recipeService)
     {
         _recipeService = recipeService;
         _ = LoadRecipeAsync(1);
     }
 
-    public async Task LoadRecipeAsync(long id)
+    public async Task LoadRecipeAsync(long id, string source = "local")
     {
         // TODO: Proper error handling
-        var recipe = await _recipeService.GetRecipeAsync(id) ?? throw new System.Exception("no");
+        var recipe = await _recipeService.First(r => r.Name == source).GetRecipeAsync(id) ?? throw new System.Exception("no");
 
         Recipe.Id = recipe.Id ?? throw new Exception("");
         Recipe.Name = recipe.Name;

@@ -9,12 +9,28 @@
   <DockPanel VerticalAlignment="Stretch">
     <Border Background="LightGray" MaxWidth="200" DockPanel.Dock="Right">
       <StackPanel Orientation="Vertical">
-        <TextBlock Text="Recipe of the Day" />
+        <TextBlock Text="Recipe of the Day" FontWeight="Bold" Padding="10 10"/>
         <TextBlock Text="{Binding DailyRecipe.Name}" />
+        <ItemsControl ItemsSource="{Binding DailyRecipe.Tags}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Background="#E8E8E8" CornerRadius="12" Padding="6,2" Margin="2">
+                <TextBlock Text="{Binding Name}" FontSize="11" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </StackPanel>
     </Border>
     <StackPanel Orientation="Vertical">
-      <TextBlock Text="MealShare.NET" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <TextBlock Text="Welcome to MealShare.NET" HorizontalAlignment="Center" FontSize="20" />
+      <TextBlock Text="Manage, view, and update local/centralized recipes" HorizontalAlignment="Center" />
     </StackPanel>
   </DockPanel>
 </UserControl>
